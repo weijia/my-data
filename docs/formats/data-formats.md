@@ -9,7 +9,9 @@ my-data/
 ├── README.md                          # 项目说明
 ├── docs/
 │   └── formats/
-│       └── data-formats.md            # 本文件：数据格式规范
+│       ├── data-formats.md            # 本文件：数据格式规范
+│       ├── webdav-data-formats.md     # WebDAV 同步数据格式
+│       └── my-quant-strategy-format.md # My-Quant 策略数据格式
 ├── stocks/                            # 股票基础数据
 │   ├── stock_data.json                # 股票基础信息
 │   └── watchlist.json                 # 关注列表
@@ -390,6 +392,13 @@ my-data/
 |------|------|------|
 | `watchList` | `Array<string>` | 关注的股票代码列表 |
 | `lastUpdated` | `string` | 最后更新时间，ISO 8601 格式 |
+
+---
+
+## 相关文档
+
+- [WebDAV 数据格式](./webdav-data-formats.md) - WebDAV 同步的数据格式
+- [My-Quant 策略格式](./my-quant-strategy-format.md) - My-Quant 应用策略数据格式
 
 ---
 
