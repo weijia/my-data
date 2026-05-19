@@ -237,6 +237,7 @@ interface OrderCommand {
     provider: string;        // 券商
     accountType: string;     // 账户类型
     side?: string;           // 交易方向（不使用融资时）
+    endDate?: string;        // 条件单结束日期（格式 "YYYY-MM-DD"），不传则使用默认过期逻辑
   };
 }
 ```
@@ -248,7 +249,7 @@ interface OrderCommand {
   "id": "myquant_abc123",
   "msgId": "1750000000000_abcd",
   "user": "myquant",
-  "msg": "{\"action\":\"buy\",\"data\":{\"stockCode\":\"600519\",\"stockName\":\"贵州茅台\",\"tradeVolume\":200,\"percentage\":0.5,\"provider\":\"pingan\",\"accountType\":\"default\",\"side\":\"COLLABUY\"}}",
+  "msg": "{\"action\":\"buy\",\"data\":{\"stockCode\":\"600519\",\"stockName\":\"贵州茅台\",\"tradeVolume\":200,\"percentage\":0.5,\"provider\":\"pingan\",\"accountType\":\"default\",\"side\":\"COLLABUY\",\"endDate\":\"2026-05-30\"}}",
   "time": 1750000000000
 }
 ```
