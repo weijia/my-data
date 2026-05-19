@@ -1,0 +1,11 @@
+{
+  "stocks": [
+    {
+      "id": "1700000000000abc12",
+      "stockName": "星湖科技",
+      "stockCode": "600866",
+      "accountType": "default"
+    }
+  ],
+  "lastUpdated": "2025-01-01T12:00:00.000Z"
+}

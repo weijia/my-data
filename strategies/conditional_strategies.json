@@ -1,0 +1,22 @@
+{
+  "strategies": [
+    {
+      "id": "1700000000000abc12",
+      "stockName": "星湖科技",
+      "stockCode": "600866",
+      "deltaPercentage": "5",
+      "deltaAmount": "0.500",
+      "bounceType": "percentage",
+      "tradeVolume": "100",
+      "targetPrice": "10.000",
+      "notes": "",
+      "accountType": "credit",
+      "strategyType": "bottom_buy",
+      "side": "MARGINBUY",
+      "createDate": "01-15 10:30:00",
+      "expiredTime": "2025-03-15",
+      "status": "active"
+    }
+  ],
+  "lastUpdated": "2025-01-01T12:00:00.000Z"
+}
