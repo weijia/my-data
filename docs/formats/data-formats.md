@@ -24,7 +24,8 @@ my-data/
 ├── holdings/                          # 持仓数据
 │   └── holdings.default.{timestamp}.json  # 持仓历史
 ├── config/                            # 配置数据
-│   └── window_config.json             # 窗口配置
+│   ├── window_config.json             # 窗口配置
+│   └── webdav_config.json             # WebDAV 连接配置
 └── trends/                            # 趋势判断数据
     └── trend_judgment_{name}_{date}.json
 ```
@@ -42,6 +43,7 @@ my-data/
 | `trends/trend_judgment_{name}_{date}.json` | 趋势判断 | 独立同步 |
 | `holdings/holdings.default.{timestamp}.json` | 持仓历史/导出 | 独立同步 |
 | `config/window_config.json` | 窗口配置 | 独立同步 |
+| `config/webdav_config.json` | WebDAV 连接配置 | 独立同步 |
 | `docs/formats/kids-point-format.md` | Kids-Point 积分系统 | 独立文档 |
 
 > **同步模式说明**：单文件模式将所有策略数据合并到一个文件中同步（默认）；多文件模式将各类型策略分别保存到独立文件。
@@ -379,7 +381,33 @@ my-data/
 
 ---
 
-## 9. 关注列表
+## 9. WebDAV 连接配置
+
+**文件路径**: `config/webdav_config.json`
+
+**localStorage 变量名**: `webdav_config`
+
+### WebDAV 配置数据结构
+
+```json
+{
+  "url": "https://xxx.teracloud.jp/dav/",
+  "username": "yyy",
+  "password": "zzz"
+}
+```
+
+| 字段 | 类型 | 必选 | 说明 |
+|------|------|------|------|
+| `url` | `string` | 是 | WebDAV 服务器地址，以 `/` 结尾 |
+| `username` | `string` | 是 | WebDAV 用户名 |
+| `password` | `string` | 是 | WebDAV 密码 |
+
+> **注意**: 该配置同时存储在 WebDAV（`config/webdav_config.json`）和页面 localStorage（变量名 `webdav_config`）中，格式一致。
+
+---
+
+## 10. 关注列表
 
 **文件路径**: `stocks/watchlist.json`
 
