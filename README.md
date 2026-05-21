@@ -21,7 +21,8 @@ my-data/
 ├── holdings/                          # 持仓数据
 │   └── holdings.default.{timestamp}.json  # 持仓历史
 ├── config/                            # 配置数据
-│   └── window_config.json             # 窗口配置
+│   ├── window_config.json             # 窗口配置
+│   └── webdav_config.json             # WebDAV 连接配置
 └── trends/                            # 趋势判断数据
     └── trend_judgment_{name}_{date}.json
 ```
@@ -35,7 +36,7 @@ my-data/
 1. **股票数据** (`stocks/`): 存储股票基础信息和关注列表
 2. **策略数据** (`strategies/`): 存储各种交易策略，支持单文件模式和多文件模式
 3. **持仓数据** (`holdings/`): 存储持仓历史记录
-4. **配置数据** (`config/`): 存储应用配置，如窗口位置等
+4. **配置数据** (`config/`): 存储应用配置，如窗口位置、WebDAV 连接等
 5. **趋势数据** (`trends/`): 存储股票趋势判断数据
 
 ## 同步模式
