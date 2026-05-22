@@ -385,7 +385,7 @@ my-data/
 
 **文件路径**: `config/webdav_config.json`
 
-**localStorage 变量名**: `webDavConfig`
+**localStorage 变量名**: `webDAVConfig`
 
 ### WebDAV 配置数据结构
 
@@ -403,7 +403,7 @@ my-data/
 | `username` | `string` | 是 | HTTP Basic Auth 用户名 |
 | `password` | `string` | 是 | HTTP Basic Auth 密码 |
 
-> **注意**: 该配置同时存储在 WebDAV（`config/webdav_config.json`）和页面 localStorage（变量名 `webDavConfig`）中，格式一致。
+> **注意**: 该配置同时存储在 WebDAV（`config/webdav_config.json`）和页面 localStorage（变量名 `webDAVConfig`）中，格式一致。
 
 ---
 
