@@ -385,13 +385,13 @@ my-data/
 
 **文件路径**: `config/webdav_config.json`
 
-**localStorage 变量名**: `webdav_config`
+**localStorage 变量名**: `webDavConfig`
 
 ### WebDAV 配置数据结构
 
 ```json
 {
-  "url": "https://xxx.teracloud.jp/dav/",
+  "url": "https://xxx.teracloud.jp/dav",
   "username": "yyy",
   "password": "zzz"
 }
@@ -399,11 +399,11 @@ my-data/
 
 | 字段 | 类型 | 必选 | 说明 |
 |------|------|------|------|
-| `url` | `string` | 是 | WebDAV 服务器地址，以 `/` 结尾 |
-| `username` | `string` | 是 | WebDAV 用户名 |
-| `password` | `string` | 是 | WebDAV 密码 |
+| `url` | `string` | 是 | WebDAV 服务器基础 URL（不含末尾斜杠，保存时自动去除） |
+| `username` | `string` | 是 | HTTP Basic Auth 用户名 |
+| `password` | `string` | 是 | HTTP Basic Auth 密码 |
 
-> **注意**: 该配置同时存储在 WebDAV（`config/webdav_config.json`）和页面 localStorage（变量名 `webdav_config`）中，格式一致。
+> **注意**: 该配置同时存储在 WebDAV（`config/webdav_config.json`）和页面 localStorage（变量名 `webDavConfig`）中，格式一致。
 
 ---
 
