@@ -11,6 +11,7 @@ my-data/
 │   └── formats/
 │       ├── data-formats.md            # 本文件：数据格式规范
 │       ├── kids-point-format.md         # Kids-Point 积分系统格式
+│       ├── utags-bookmark-format.md     # utags WebDAV 书签格式
 │       ├── webdav-data-formats.md     # WebDAV 同步数据格式
 │       └── my-quant-strategy-format.md # My-Quant 策略数据格式
 ├── stocks/                            # 股票基础数据
@@ -45,6 +46,7 @@ my-data/
 | `config/window_config.json` | 窗口配置 | 独立同步 |
 | `config/webdav_config.json` | WebDAV 连接配置 | 独立同步 |
 | `docs/formats/kids-point-format.md` | Kids-Point 积分系统 | 独立文档 |
+| `docs/formats/utags-bookmark-format.md` | utags WebDAV 书签格式 | 独立文档 |
 
 > **同步模式说明**：单文件模式将所有策略数据合并到一个文件中同步（默认）；多文件模式将各类型策略分别保存到独立文件。
 
@@ -428,6 +430,7 @@ my-data/
 ## 相关文档
 
 - [Kids-Point 积分系统格式](./kids-point-format.md) - Kids-Point 应用数据格式
+- [utags WebDAV 书签格式](./utags-bookmark-format.md) - utags WebDAV 书签数据格式
 - [WebDAV 数据格式](./webdav-data-formats.md) - WebDAV 同步的数据格式
 - [My-Quant 策略格式](./my-quant-strategy-format.md) - My-Quant 应用策略数据格式
 
