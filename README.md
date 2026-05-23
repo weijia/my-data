@@ -7,24 +7,22 @@
 ```
 my-data/
 ├── README.md                          # 项目说明
-├── docs/
-│   └── formats/
-│       └── data-formats.md            # 数据格式规范文档
+├── docs/formats/                      # 数据格式文档
+│   ├── data-formats.md                # 格式总索引
+│   ├── stock-data.md                  # 股票基础信息 + 关注列表
+│   ├── strategy-formats.md            # 策略数据格式
+│   ├── trend-judgment-format.md       # 趋势判断格式
+│   ├── holdings-format.md             # 持仓历史格式
+│   ├── config-formats.md              # 应用配置格式
+│   ├── webdav-data-formats.md         # WebDAV 同步架构
+│   ├── utags-bookmark-format.md       # utags 书签格式
+│   ├── kids-point-format.md           # kids-point 格式
+│   └── my-quant-strategy-format.md    # my-quant 策略格式
 ├── stocks/                            # 股票基础数据
-│   ├── stock_data.json                # 股票基础信息
-│   └── watchlist.json                 # 关注列表
 ├── strategies/                        # 策略数据
-│   ├── all_strategies.json            # 综合策略（单文件模式）
-│   ├── conditional_strategies.json    # 条件单策略
-│   ├── grid_strategies.json           # 网格策略
-│   └── advanced_strategies.json       # 高级策略
 ├── holdings/                          # 持仓数据
-│   └── holdings.default.{timestamp}.json  # 持仓历史
 ├── config/                            # 配置数据
-│   ├── window_config.json             # 窗口配置
-│   └── webdav_config.json             # WebDAV 连接配置
 └── trends/                            # 趋势判断数据
-    └── trend_judgment_{name}_{date}.json
 ```
 
 ## 数据格式
