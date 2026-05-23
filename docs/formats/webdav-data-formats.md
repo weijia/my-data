@@ -49,3 +49,20 @@
 | my-quant（配置） | `config/` | [config-formats.md](./config-formats.md) |
 | kids-point | `/kidspoints-data/` | [kids-point-format.md](./kids-point-format.md) |
 | utags | 由 `target.path` 配置决定 | [utags-bookmark-format.md](./utags-bookmark-format.md) |
+
+## 应用数据目录约定
+
+新应用推荐将数据存放在 `app_data/{项目名}/` 目录下。例如：
+
+```
+app_data/
+├── onenav/                            # onenav 首页应用
+│   └── config.json                     # 应用专属配置
+├── kids-point/                        # kids-point 应用
+│   └── config.json
+└── ...                                # 其他应用
+```
+
+- **`app_data/`**：各应用的独立数据目录，按项目名分目录存放
+- **`config/`**：仅存放全局共享配置（如 `webdav_config.json`）
+- 历史遗留的 `stocks/`、`strategies/`、`holdings/`、`trends/` 为 my-quant 应用专用
