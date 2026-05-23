@@ -39,6 +39,8 @@
 
 认证方式为 HTTP Basic Auth（`username:password`）。
 
+**localStorage 共享约定**：推荐各应用使用共享 key `webDAVConfig` 存储连接配置，避免用户重复输入。详见 [共享 localStorage 约定](./config-formats.md#3-共享-localstorage-约定推荐)。
+
 ## 各应用 WebDAV 路径
 
 | 应用 | WebDAV 路径 | 数据格式文档 |
