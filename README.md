@@ -29,9 +29,9 @@ my-data/
 
 ## 目录约定
 
-- **`app_data/{项目名}/`**（推荐）：各应用的独立数据存放目录，每个应用在 `app_data/` 下创建以项目名命名的子目录，存放该应用专属的配置和数据文件。
+- **`app_data/{项目名}/`**（缺省）：所有应用的数据默认存放在此目录下，每个应用在 `app_data/` 下创建以项目名命名的子目录。
 - **`config/`**：全局共享配置，如 WebDAV 连接配置。
-- **`stocks/`、`strategies/`、`holdings/`、`trends/`**：my-quant 应用的数据目录（历史遗留，新应用建议使用 `app_data/`）。
+- **`stocks/`、`strategies/`、`holdings/`、`trends/`**：my-quant 应用的数据目录（历史遗留）。
 
 ## 数据格式
 

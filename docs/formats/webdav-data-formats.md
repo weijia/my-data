@@ -54,7 +54,7 @@
 
 ## 应用数据目录约定
 
-新应用推荐将数据存放在 `app_data/{项目名}/` 目录下。例如：
+所有应用的数据默认存放在 `app_data/{项目名}/` 目录下。例如：
 
 ```
 app_data/
@@ -65,6 +65,6 @@ app_data/
 └── ...                                # 其他应用
 ```
 
-- **`app_data/`**：各应用的独立数据目录，按项目名分目录存放
+- **`app_data/`**：所有应用的默认数据目录，按项目名分目录存放
 - **`config/`**：仅存放全局共享配置（如 `webdav_config.json`）
 - 历史遗留的 `stocks/`、`strategies/`、`holdings/`、`trends/` 为 my-quant 应用专用
