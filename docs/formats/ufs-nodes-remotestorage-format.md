@@ -33,6 +33,7 @@
 | `last_access` | `number` / `string` | 是 | `Date.now()` | 最后访问时间。存储时为时间戳(`number`)，读取后转换为浏览器本地时间字符串 |
 | `capabilities` | `array` | 否 | `[]` | 该节点对外暴露的可被控制能力清单，详见[控制能力](#控制能力-capabilities) |
 | `inbox` | `array` | 否 | `[]` | 发往本节点的命令队列，由控制端写入、被控端读取执行，详见[命令队列](#命令队列-inbox) |
+| `mqtt` | `object` | 否 | - | MQTT 远程命令通道配置；节点启用 MQTT 时上报，供控制端定位发布地址与加密密钥，详见[MQTT 远程命令通道](#mqtt-远程命令通道-mqtt) |
 
 ### 状态流转
 
@@ -204,6 +205,73 @@ Windows 节点通常用**统一的 `power` 能力**暴露电源管理，以 `mod
 - **被控端更新自身**：更新 `last_access`/`status` 及执行回执时，必须保留 `inbox`、`capabilities` 中由控制端写入的内容。
 - **幂等去重**：以 `cmd_id` 去重，重复写入同一 `cmd_id` 应被忽略。
 - **冲突处理**：若出现并发写冲突（last-writer-wins），以 `updated_at` / `cmd_id` 较晚者为准；业务层可对关键命令加重试。
+
+## MQTT 远程命令通道 (mqtt)
+
+节点可额外暴露一个基于 MQTT 的**远程命令通道**：控制端将命令以 AES 加密后发布到 MQTT 主题，被控端订阅主题、解密后在本地 shell 执行。节点将其 MQTT 连接信息随心跳上报到 RemoteStorage（**仅启用时**，未启用则字段整体省略），使控制端无需额外约定即可知道往何处发布、用什么密钥加密。
+
+> 与 `inbox` 的区别：`inbox` 走 RemoteStorage 文件（双向回执、轮询），`mqtt` 通道走 MQTT Broker（近实时、单向推送命令）。两者可并存：控制端既能在 `inbox` 留痕，也能经 MQTT 即时下发。
+
+节点 `mqtt` 字段结构（位于节点对象根级）：
+
+```json
+{
+  "mqtt": {
+    "enabled": true,
+    "broker": "tcp://broker.emqx.io:1883",
+    "topic": "ufsd/cmd",
+    "username": "device-001",
+    "password": "broker-pass",
+    "secret": "aes-decrypt-key",
+    "client_id": "go-daemon-550e8400"
+  }
+}
+```
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `enabled` | `boolean` | 是 | 是否启用 MQTT 远程命令通道；`false` 时本字段整体省略 |
+| `broker` | `string` | 启用时必填 | MQTT Broker 地址，如 `tcp://host:1883`、`ssl://host:8883`、`wss://host:8084/mqtt` |
+| `topic` | `string` | 启用时必填 | 控制端发布命令、被控端订阅的主题 |
+| `username` | `string` | 否 | Broker 登录用户名 |
+| `password` | `string` | 否 | Broker 登录密码（明文，注意存储安全） |
+| `secret` | `string` | 启用时必填 | AES 解密密钥，对应发送端 `CryptoJS.AES.encrypt(text, password)` 中的 `password`；控制端须用同一密钥加密命令 |
+| `client_id` | `string` | 否 | 自定义 MQTT ClientID；留空时由被控端按节点 UUID 自动生成 |
+
+### 消息格式与执行
+
+控制端向 `topic` 发布的消息为 **CryptoJS 兼容的 OpenSSL 格式密文**（前缀 `Salted__` + 随机 salt + Base64，内部为 AES-256-CBC，密钥由 `EVP_BytesToKey`(MD5) 从 `secret` 派生）。被控端解密后：
+
+- 若明文为 JSON 且含 `msg` 字段，则取 `msg` 作为命令执行；
+- 否则整段明文作为命令执行。
+
+被控端在本地 shell 执行命令：`sh -c "<cmd>"`（Linux）/ `cmd /C "<cmd>"`（Windows）。
+
+> 安全提示：`mqtt` 中的 `password` 与 `secret` 均为敏感明文，随节点文件持久化于 RemoteStorage。请确保 RemoteStorage 的访问权限（token / ACL）严格受限，否则拿到存储的人即可向该节点下发任意命令。建议 Broker 启用 TLS（`ssl://` 或 `wss://`）并配置订阅 ACL。
+
+### 完整节点对象示例（含 MQTT 通道）
+
+```json
+{
+  "uuid": "550e8400-e29b-41d4-a716-446655440000",
+  "name": "客厅控制板",
+  "status": "online",
+  "last_access": 1719876543210,
+  "capabilities": [
+    { "id": "power", "type": "action", "label": "电源控制", "params": { "mode": ["sleep","hibernate","shutdown","restart"] } }
+  ],
+  "mqtt": {
+    "enabled": true,
+    "broker": "tcp://broker.emqx.io:1883",
+    "topic": "ufsd/cmd",
+    "username": "device-001",
+    "password": "broker-pass",
+    "secret": "aes-decrypt-key",
+    "client_id": "go-daemon-550e8400"
+  },
+  "inbox": []
+}
+```
 
 ## 本地存储 (localStorage)
 
