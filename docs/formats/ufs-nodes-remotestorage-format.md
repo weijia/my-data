@@ -247,7 +247,56 @@ Windows 节点通常用**统一的 `power` 能力**暴露电源管理，以 `mod
 
 被控端在本地 shell 执行命令：`sh -c "<cmd>"`（Linux）/ `cmd /C "<cmd>"`（Windows）。
 
-> 安全提示：`mqtt` 中的 `password` 与 `secret` 均为敏感明文，随节点文件持久化于 RemoteStorage。请确保 RemoteStorage 的访问权限（token / ACL）严格受限，否则拿到存储的人即可向该节点下发任意命令。建议 Broker 启用 TLS（`ssl://` 或 `wss://`）并配置订阅 ACL。
+### 下发报文字段约定（请求 / 回执配对）
+
+协议已正向约定「如何提取要执行的命令」（规则 A）：解密后明文若为 JSON 且含 `msg` 字段，则执行 `msg`；否则整段明文作为命令执行。
+
+但若控制端**需要接收执行回执**，下发报文必须能标识「这是哪条请求」——回执（见下节）会原样回带 `id` / `msgId` / `user` 以便配对，因此必须在**发送侧**正向约束这些字段，而非仅在回执侧要求「原样回传」。
+
+当控制端下发 **JSON 格式明文**且需要回执时，建议携带：
+
+- `msgId`：全局唯一字符串，作为请求与回执匹配的主键（**如需回执则为必填**）；
+- `id`：可选业务标识；
+- `user`：可选，操作来源标识（如 `web-console`）；
+- `msg`：真正的命令字符串（见规则 A）。
+
+示例下发明文：
+
+```json
+{
+  "msgId": "uuid-xxxx",
+  "id": "",
+  "user": "web-console",
+  "msg": "shutdown /h"
+}
+```
+
+> **边界说明**：若下发明文为**纯文本（非 JSON）**，被控端仍会按规则 A 正常执行命令，但纯文本无法携带 `msgId` 等关联字段，回执中也将缺失这些字段、控制端无法将其与某条下发命令匹配。因此**需要等待执行结果的场景，建议使用携带 `msgId` 的 JSON 格式，不要使用裸文本**。
+
+### 执行结果回复（`<topic>/reply`）
+
+命令执行完毕后，被控端将结果**加密后发布到 `<topic>/reply`**（即在命令主题后追加 `/reply`，如 `ufsd/cmd` → `ufsd/cmd/reply`），控制端订阅该主题即可收取，无需轮询 RemoteStorage。
+
+回复消息与入站命令**对称**：同样采用 CryptoJS/OpenSSL 兼容的 AES-256-CBC 格式，使用同一个 `secret` 加密；控制端用相同的 `secret` 解密（对应 `CryptoJS.AES.decrypt(cipher, password)`）。解密后的明文为如下 JSON：
+
+```json
+{
+  "id": "与下发时一致",
+  "msgId": "与下发时一致，控制端据此关联请求与回执",
+  "user": "与下发时一致",
+  "ok": true,
+  "output": "命令的 stdout + stderr 合并输出",
+  "error": "仅执行失败时为错误描述，成功时省略",
+  "time": 1719876543210
+}
+```
+
+- `id` / `msgId` / `user` 原样回带下发消息中的同名字段，便于控制端把回执与请求对应（建议下发时为每条命令生成唯一 `msgId`）。
+- `ok` 表示命令是否成功退出（`exec.CommandContext` 返回 `nil` 即为成功）。
+- `output` 为合并后的输出；命令超时（默认 5 分钟）或被控端退出时会被取消，结果仍可回传。
+- 回复发布 QoS=1、不保留（retained=false）；若发布时 MQTT 连接已断开，则跳过并记入本地日志。
+
+> 安全提示：`mqtt` 中的 `password` 与 `secret` 均为敏感明文，随节点文件持久化于 RemoteStorage。请确保 RemoteStorage 的访问权限（token / ACL）严格受限，否则拿到存储的人即可向该节点下发任意命令。建议 Broker 启用 TLS（`ssl://` 或 `wss://`）并配置订阅 ACL；命令输出可能含敏感信息，回复同样建议经 TLS 传输。
 
 ### 完整节点对象示例（含 MQTT 通道）
 
