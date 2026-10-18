@@ -5,17 +5,16 @@
 ## 概述
 
 - **保存时机**：用户在应用内创建条件单 / 网格单时，随创建流程一并保存（创建接口返回后写入，以便带上服务端 `id`）。
+- **单一系列**：条件单与网格单写入**同一系列**文件（按月），用记录内的 `type` 区分。
 - **保存粒度**：按**创建月份**分文件，同月多笔创建追加到同一文件（按 `id` 去重合并）。
 - **数据来源**：创建接口的返回值（`id`）+ 创建时的实时价格（`startPrice`）+ 创建入参。
 - **字段命名**：`id`、`startPrice`、`createTime` 为入库关键字段，其余专有字段按策略类型展开。
 
 ## 文件路径
 
-| 类型 | 文件路径 |
-|------|----------|
-| 条件单 | `app_data/stocks/conditional_strategies/{YYYY-MM}.json` |
-| 网格单 | `app_data/stocks/grid_strategies/{YYYY-MM}.json` |
+**文件路径**: `app_data/stocks/orders/{YYYY-MM}.json`
 
+- 条件单与网格单**合并为同一系列**，每月一个文件，用记录内的 `type`（`condition` / `grid`）区分。
 - `{YYYY-MM}` 为创建月份（本地时区 `Asia/Shanghai`），如 `2026-10`。
 - 该路径遵循 my-data 目录约定中的 `app_data/{项目名}/`，并与 my-quant 实际 WebDAV 路径一致。
 
@@ -25,7 +24,7 @@
 
 ```json
 {
-  "type": "conditional_order_create",
+  "type": "order_create_records",
   "month": "2026-10",
   "orders": [ /* OrderRecord[] */ ],
   "lastUpdated": "2026-10-18T02:30:00.000Z"
@@ -34,9 +33,9 @@
 
 | 字段 | 类型 | 必选 | 说明 |
 |------|------|------|------|
-| `type` | `string` | 是 | 数据类型标识：`"conditional_order_create"`（条件单）或 `"grid_order_create"`（网格单） |
+| `type` | `string` | 是 | 数据类型标识，固定 `"order_create_records"` |
 | `month` | `string` | 是 | 保存月份，格式 `YYYY-MM` |
-| `orders` | `Array<OrderRecord>` | 是 | 当月创建的记录，见下节 |
+| `orders` | `Array<OrderRecord>` | 是 | 当月创建的记录（条件单与网格单混存，用 `type` 区分），见下节 |
 | `lastUpdated` | `string` | 是 | 最后更新时间，ISO 8601 格式 |
 
 ---
