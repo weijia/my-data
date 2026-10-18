@@ -162,7 +162,11 @@
 - 返回 `data[].ymd_base`：含 `ymd_id`、`uuid`、`strategy_id`、`ymd_status`、`create_datetime`、`expiry_datetime`、`error_no`。
 - 状态取值：`ymd_status` = `"1"`（running，运行中）/ `"0"`（paused，已暂停）；`error_no` 为错误码（`0` 表示成功）。
 
-> **`id` 映射说明**：创建接口返回的 ID 与查询接口的标识字段未必同名。方正创建返回 `info.id`，对应 `/qt/strategy/list` 的 `content[].id` 与 `/qt/task/detail` 的 `id`；平安创建返回 `data`（订单号），而查询接口主键为 `ymd_base.ymd_id` / `ymd_base.uuid`。入库时以 `id` 为准，查询时按各接口对应字段匹配。
+> **`id` 映射说明**：创建接口返回的 ID 与查询接口的标识字段未必同名。
+> - 方正：创建返回 `info.id`，对应 `/qt/strategy/list` 的 `content[].id` 与 `/qt/task/detail` 的 `id`。
+> - 平安：**不确定（待确认）** —— 创建返回 `data`（订单号），查询接口主键为 `ymd_base.ymd_id` / `ymd_base.uuid`，两者是否一致尚未核对。
+>
+> 入库时以 `id` 为准，查询时按各接口对应字段匹配。
 
 ---
 
