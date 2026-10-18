@@ -5,7 +5,7 @@
 ## 概述
 
 - **数据来源多样**：一条成交记录可能来自条件单触发成交、网格单触发成交，或其他外部系统导入，因此用 `source` 字段标识来源。
-- **可回链策略单**：由条件单/网格单产生的成交，用 `orderId` 关联对应的策略单（见 [策略单按月归档格式](./strategy-order-archive-format.md)）。
+- **可回链策略单**：由条件单/网格单产生的成交，用 `orderId` 关联对应的策略单（见 [策略单创建时保存格式](./strategy-order-create-format.md)）。
 - **归档粒度**：按**成交月份**分文件，同月多笔成交追加到同一文件（按 `id` 去重合并）。
 
 ## 文件路径
@@ -119,7 +119,7 @@ app_data/stocks/trade_records/{YYYY-MM}.json
 | 网格单触发成交 | `grid_order` | 填对应网格单的 `id`，`orderType = "grid"` |
 | 其他系统产生 | `external` | 通常为空，可用 `externalRef` 记录来源 |
 
-> 通过 `orderId` 可把成交记录回链到 [策略单按月归档格式](./strategy-order-archive-format.md) 中的创建记录，从而还原"创建（起始时间 + 起始价）→ 触发 → 成交"的完整链路。
+> 通过 `orderId` 可把成交记录回链到 [策略单创建时保存格式](./strategy-order-create-format.md) 中的创建记录，从而还原"创建（起始时间 + 起始价）→ 触发 → 成交"的完整链路。
 
 ---
 
@@ -151,6 +151,6 @@ app_data/stocks/trade_records/{YYYY-MM}.json
 
 ## 相关文档
 
-- [策略单按月归档格式](./strategy-order-archive-format.md)
+- [策略单创建时保存格式](./strategy-order-create-format.md)
 - [策略数据格式](./strategy-formats.md)
 - [数据格式规范](./data-formats.md)

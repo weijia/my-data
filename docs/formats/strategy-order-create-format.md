@@ -1,11 +1,11 @@
-# 策略单按月归档格式
+# 策略单创建时保存格式
 
-本文档描述**创建条件单 / 网格单**时，按**创建月份**归档的数据格式。归档数据作为后续写入数据库的数据源。
+本文档描述**创建条件单 / 网格单**时保存的数据格式（按**创建月份**分文件）。保存数据作为后续写入数据库的数据源。
 
 ## 概述
 
-- **触发时机**：用户在应用内创建条件单 / 网格单成功时自动归档。
-- **归档粒度**：按**创建月份**分文件，同月多笔创建追加到同一文件（按 `id` 去重合并）。
+- **保存时机**：用户在应用内创建条件单 / 网格单时，随创建流程一并保存（创建接口返回后写入，以便带上服务端 `id`）。
+- **保存粒度**：按**创建月份**分文件，同月多笔创建追加到同一文件（按 `id` 去重合并）。
 - **数据来源**：创建接口的返回值（`id`）+ 创建时的实时价格（`startPrice`）+ 创建入参。
 - **字段命名**：`id`、`startPrice`、`createTime` 为入库关键字段，其余专有字段按策略类型展开。
 
@@ -25,7 +25,7 @@
 
 ```json
 {
-  "type": "conditional_order_archive",
+  "type": "conditional_order_create",
   "month": "2026-10",
   "orders": [ /* OrderRecord[] */ ],
   "lastUpdated": "2026-10-18T02:30:00.000Z"
@@ -34,8 +34,8 @@
 
 | 字段 | 类型 | 必选 | 说明 |
 |------|------|------|------|
-| `type` | `string` | 是 | 归档类型：`"conditional_order_archive"`（条件单）或 `"grid_order_archive"`（网格单） |
-| `month` | `string` | 是 | 归档月份，格式 `YYYY-MM` |
+| `type` | `string` | 是 | 数据类型标识：`"conditional_order_create"`（条件单）或 `"grid_order_create"`（网格单） |
+| `month` | `string` | 是 | 保存月份，格式 `YYYY-MM` |
 | `orders` | `Array<OrderRecord>` | 是 | 当月创建的记录，见下节 |
 | `lastUpdated` | `string` | 是 | 最后更新时间，ISO 8601 格式 |
 
@@ -68,7 +68,7 @@
 | `stockName` | `string` | 是 | 股票名称 |
 | `accountType` | `string` | 是 | 账户类型：`"default"` / `"credit"` |
 | `startPrice` | `number` | 是 | **起始价格**：创建该单时的实时价格，作为触发判定的起始基准价（网格单即基准价 `basicPrice`） |
-| `createTime` | `string` | 是 | **起始时间**：创建该单的时间，ISO 8601 格式（含时区）。按月归档即取此字段的 `YYYY-MM` |
+| `createTime` | `string` | 是 | **起始时间**：创建该单的时间，ISO 8601 格式（含时区）。按月分文件即取此字段的 `YYYY-MM` |
 | `status` | `string` | 否 | 策略状态，创建时通常为 `"active"`；后续按 `id` 查询状态回填，取值见 [value-definitions](./value-definitions.md) |
 
 ---
@@ -141,7 +141,7 @@
 
 一条 `OrderRecord` 对应数据库一行，建议表名 `strategy_orders`。
 
-| 归档字段 | 建议列类型 | 说明 |
+| 字段 | 建议列类型 | 说明 |
 |----------|-----------|------|
 | `id` | `VARCHAR` / `TEXT` | 主键（与 `type` 组成唯一键），后续按此查询并回填状态 |
 | `type` | `VARCHAR(16)` | 枚举：`condition` / `grid` |

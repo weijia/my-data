@@ -11,7 +11,7 @@ my-data/
 │   ├── data-formats.md                # 本文件：格式总索引
 │   ├── stock-data.md                  # 股票基础信息 + 关注列表
 │   ├── strategy-formats.md            # 策略数据（综合/条件单/网格/高级）
-│   ├── strategy-order-archive-format.md # 条件单/网格单按月归档格式
+│   ├── strategy-order-create-format.md # 条件单/网格单创建时保存格式
 │   ├── trade-record-format.md          # 成交记录格式
 │   ├── trend-judgment-format.md       # 趋势判断数据
 │   ├── holdings-format.md             # 持仓历史记录
@@ -45,8 +45,8 @@ my-data/
 | `strategies/conditional_strategies.json` | 条件单策略 | [strategy-formats.md](./strategy-formats.md#2-条件单策略) |
 | `strategies/grid_strategies.json` | 网格策略 | [strategy-formats.md](./strategy-formats.md#3-网格策略) |
 | `strategies/advanced_strategies.json` | 高级策略 | [strategy-formats.md](./strategy-formats.md#4-高级策略) |
-| `app_data/stocks/conditional_strategies/{YYYY-MM}.json` | 条件单按月归档 | [strategy-order-archive-format.md](./strategy-order-archive-format.md) |
-| `app_data/stocks/grid_strategies/{YYYY-MM}.json` | 网格单按月归档 | [strategy-order-archive-format.md](./strategy-order-archive-format.md) |
+| `app_data/stocks/conditional_strategies/{YYYY-MM}.json` | 条件单创建时保存 | [strategy-order-create-format.md](./strategy-order-create-format.md) |
+| `app_data/stocks/grid_strategies/{YYYY-MM}.json` | 网格单创建时保存 | [strategy-order-create-format.md](./strategy-order-create-format.md) |
 | `app_data/stocks/trade_records/{YYYY-MM}.json` | 成交记录 | [trade-record-format.md](./trade-record-format.md) |
 | `trends/trend_judgment_{name}_{date}.json` | 趋势判断 | [trend-judgment-format.md](./trend-judgment-format.md) |
 | `holdings/holdings.default.{timestamp}.json` | 持仓历史 | [holdings-format.md](./holdings-format.md) |

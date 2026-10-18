@@ -11,7 +11,7 @@ my-data/
 │   ├── data-formats.md                # 格式总索引
 │   ├── stock-data.md                  # 股票基础信息 + 关注列表
 │   ├── strategy-formats.md            # 策略数据格式
-│   ├── strategy-order-archive-format.md # 条件单/网格单按月归档格式
+│   ├── strategy-order-create-format.md # 条件单/网格单创建时保存格式
 │   ├── trade-record-format.md          # 成交记录格式
 │   ├── trend-judgment-format.md       # 趋势判断格式
 │   ├── holdings-format.md             # 持仓历史格式
