@@ -68,7 +68,7 @@
 | `accountType` | `string` | 是 | 账户类型：`"default"` / `"credit"` |
 | `startPrice` | `number` | 是 | **起始价格**：创建该单时的实时价格，作为触发判定的起始基准价（网格单即基准价 `basicPrice`） |
 | `createTime` | `string` | 是 | **起始时间**：创建该单的时间，ISO 8601 格式（含时区）。按月分文件即取此字段的 `YYYY-MM` |
-| `status` | `string` | 否 | 策略状态，创建时通常为 `"active"`；后续按 `id` 查询状态回填，取值见 [value-definitions](./value-definitions.md) |
+| `status` | `string` | 否 | 策略状态，创建时通常为 `"active"`；后续按 `id` 查询状态回填，取值见 [状态查询与状态取值](#状态查询与状态取值) |
 
 ---
 
@@ -133,6 +133,36 @@
 条件单的触发由**起始时间 + 起始价格**共同决定：`createTime` 为起始时刻，`startPrice` 为创建时的实时价格，作为触发判定的起始基准价；再结合 `deltaPercentage` / `deltaAmount` 描述触发条件。
 
 > 具体触发价由平台按策略类型计算，且会随行情变化调整，故本格式只记录触发判定的**起始基准**（`createTime` + `startPrice`），不固定触发价公式。
+
+---
+
+## 状态查询与状态取值
+
+记录的 `id` 用于后续向券商服务器接口查询策略状态，回填 `status`。
+
+### 方正（`provider` = `founder`，基础 URL `https://quant.foundersc.com`）
+
+| 查询接口 | 方法/路径 | 说明 |
+|----------|-----------|------|
+| 条件单列表 | `GET /qt/task/getTaskList?sName=condition&statusList=0&statusList=1&statusList=2&page=1&pageSize=2000` | 返回 `info.content[]`，含 `id`、`status` |
+| 任务详情 | `GET /qt/task/detail?id={id}&isMock=false` | 按 `id` 查单条详情（网格策略详情走此接口） |
+| 策略列表（全量） | `GET /qt/strategy/list` | `content[]` 含 `id`、`status`、`sname`（`GridTrading` = 网格，其余为条件单） |
+
+- 状态取值（`/qt/strategy/list`、`/qt/task/getTaskList`）：`RUNNING`（运行中）/ `STOPPED`（已停止）/ `STOPPED_MANUAL`（手动停止）。
+- 另有条件单状态枚举：`active`（激活中）/ `triggered`（已触发）/ `completed`（已完成）/ `canceled`（已取消）/ `expired`（已过期）/ `failed`（创建失败）。
+- 停止接口：`POST /qt/task/stop`。
+
+### 平安（`provider` = `pingan`）
+
+| 查询接口 | 方法/路径 | 说明 |
+|----------|-----------|------|
+| 条件单/网格列表 | `POST https://m.stock.pingan.com/restapi/past/queryMyYmdForPage` | 一个接口同时覆盖条件单与网格 |
+
+- 入参：`search_status`（`"0,1"` = 全部）、`strategy_ids`（`8,34,23,35,9,7,12,21,15,39,22,38`，其中 `12`/`34`/`35` 为网格）、`date_type`、`stock_code`、`page_size`、`order_column` 等。
+- 返回 `data[].ymd_base`：含 `ymd_id`、`uuid`、`strategy_id`、`ymd_status`、`create_datetime`、`expiry_datetime`、`error_no`。
+- 状态取值：`ymd_status` = `"1"`（running，运行中）/ `"0"`（paused，已暂停）；`error_no` 为错误码（`0` 表示成功）。
+
+> **`id` 映射说明**：创建接口返回的 ID 与查询接口的标识字段未必同名。方正创建返回 `info.id`，对应 `/qt/strategy/list` 的 `content[].id` 与 `/qt/task/detail` 的 `id`；平安创建返回 `data`（订单号），而查询接口主键为 `ymd_base.ymd_id` / `ymd_base.uuid`。入库时以 `id` 为准，查询时按各接口对应字段匹配。
 
 ---
 
