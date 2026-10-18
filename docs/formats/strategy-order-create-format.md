@@ -66,9 +66,10 @@
 | `stockCode` | `string` | 是 | 股票代码 |
 | `stockName` | `string` | 是 | 股票名称 |
 | `accountType` | `string` | 是 | 账户类型：`"default"` / `"credit"` |
-| `startPrice` | `number` | 是 | **起始价格**：创建该单时的实时价格，作为触发判定的起始基准价（网格单即基准价 `basicPrice`） |
-| `createTime` | `string` | 是 | **起始时间**：创建该单的时间，ISO 8601 格式（含时区）。按月分文件即取此字段的 `YYYY-MM` |
+| `startPrice` | `number` | 是* | **起始价格**：创建该单时的实时价格，作为触发判定的起始基准价（网格单即基准价 `basicPrice`）。`origin` 为 `"server"` 的条件单记录无此值，为 `null`（服务端任务里没有"创建时实时价"，无法还原） |
+| `createTime` | `string` | 是* | **起始时间**：创建该单的时间，ISO 8601 格式（含时区）。按月分文件即取此字段的 `YYYY-MM`。服务端任务缺 `time` 时补建记录为 `null` |
 | `status` | `string` | 否 | 策略状态，创建时通常为 `"active"`；后续按 `id` 查询状态回填，取值见 [状态查询与状态取值](#状态查询与状态取值) |
+| `origin` | `string` | 是 | **记录来源**：`"plugin"` = 本插件创建时写入；`"server"` = 「自动同步全部」时按服务端任务补建（非本插件创建，或创建时保存失败） |
 
 ---
 
@@ -146,11 +147,16 @@
 |----------|-----------|------|
 | 条件单列表 | `GET /qt/task/getTaskList?sName=condition&statusList=0&statusList=1&statusList=2&page=1&pageSize=2000` | 返回 `info.content[]`，含 `id`、`status` |
 | 任务详情 | `GET /qt/task/detail?id={id}&isMock=false` | 按 `id` 查单条详情（网格策略详情走此接口） |
-| 策略列表（全量） | `GET /qt/strategy/list` | `content[]` 含 `id`、`status`、`sname`（`GridTrading` = 网格，其余为条件单） |
+| 策略列表（全量） | `GET /qt/strategy/list` | `content[]` 含 `id`、`status`、`sname` |
 
-- 状态取值（`/qt/strategy/list`、`/qt/task/getTaskList`）：`RUNNING`（运行中）/ `STOPPED`（已停止）/ `STOPPED_MANUAL`（手动停止）。
-- 另有条件单状态枚举：`active`（激活中）/ `triggered`（已触发）/ `completed`（已完成）/ `canceled`（已取消）/ `expired`（已过期）/ `failed`（创建失败）。
+**网格单怎么认**：服务端任务用 `sname` 区分，网格实测有两种取值 `GridTrading`（`data/grid-example.md`）与 `AdvancedGridTrading`（`data/grid_strategy_for_credit_account.json`），两者都算网格；其余 `sname`（如 `strategy_bottom_buy` / `strategy_top_sell`）为条件单。注意**网格单没有条件单那样的列表接口**（`getTaskList` 只返回 `sName=condition`），只能按已知 `id` 调 `task/detail` 逐条取。
+
+- **服务器原始值**（`/qt/strategy/list`、`/qt/task/getTaskList`、`/qt/task/detail` 返回同一套）：`RUNNING`（运行中）/ `STOPPED`（已停止）/ `STOPPED_MANUAL`（手动停止）—— 样本已见；另有 `COMPLETED`（映射表已定义，样本未直接见到）。
+- **入库口径**：`status` **不原样存服务器值**，按 `vue-dialog-userscript` 的 `docs/reference/value-definitions.md` §3.2 映射为内部枚举：`RUNNING`→`active`、`STOPPED`→`stopped`、`STOPPED_MANUAL`→`stopped_manual`、`COMPLETED`→`completed`，未知值兜底 `unknown`。创建时写入的 `"active"` 即 `RUNNING`，与回填口径一致。
+- 内部枚举另有 `triggered`（已触发）/`canceled`（已取消）/`expired`（已过期）/`failed`（失败），但**无对应的服务器原始值样本**，回填时遇到未知值一律走 `unknown` 兜底，不猜。
 - 停止接口：`POST /qt/task/stop`。
+
+> **实现状态**：方正侧已实现（`vue-dialog-userscript` 在「自动同步全部」每轮解析完成后，用本轮已获取到的服务端任务回填/补建 `orders/` 记录：`id` 命中则更新 `status`，未命中则补建一条并标记 `origin="server"`；获取不到的不动。详见其 `docs/api/OrderCreateSaver-API.md`）。平安侧**未实现**（等 id 映射确认后再说）。
 
 ### 平安（`provider` = `pingan`）
 
@@ -160,10 +166,11 @@
 
 - 入参：`search_status`（`"0,1"` = 全部）、`strategy_ids`（`8,34,23,35,9,7,12,21,15,39,22,38`，其中 `12`/`34`/`35` 为网格）、`date_type`、`stock_code`、`page_size`、`order_column` 等。
 - 返回 `data[].ymd_base`：含 `ymd_id`、`uuid`、`strategy_id`、`ymd_status`、`create_datetime`、`expiry_datetime`、`error_no`。
-- 状态取值：`ymd_status` = `"1"`（running，运行中）/ `"0"`（paused，已暂停）；`error_no` 为错误码（`0` 表示成功）。
+- 状态取值（**服务器原始值**）：`ymd_status` = `"1"`（running，运行中）/ `"0"`（paused，已暂停）；`error_no` 为错误码（`0` 表示成功）。
+- **入库口径**：`"1"`→`active`、`"0"`→`stopped`（`"0"` 原文语义是「暂停」，与内部 `stopped` 对齐；若后续需要区分「可恢复的暂停」，需先在 `value-definitions.md` 的内部枚举里新增 `paused`，不要擅自映射成其它值）。
 
 > **`id` 映射说明**：创建接口返回的 ID 与查询接口的标识字段未必同名。
-> - 方正：创建返回 `info.id`，对应 `/qt/strategy/list` 的 `content[].id` 与 `/qt/task/detail` 的 `id`。
+> - 方正：创建返回 `info.id`，对应 `/qt/strategy/list` 的 `content[].id` 与 `/qt/task/detail` 的 `id`。**已由仓库样本确认**：`data/create_condition_post.md` 的创建响应 `info.id`、`data/getTaskList.json` 的 `content[].id`、`/qt/task/stop` 的取参 id 与 `/qt/task/detail` 的 `info.taskInfo.id` 属同一 id 命名空间。
 > - 平安：**不确定（待确认）** —— 创建返回 `data`（订单号），查询接口主键为 `ymd_base.ymd_id` / `ymd_base.uuid`，两者是否一致尚未核对。
 >
 > 入库时以 `id` 为准，查询时按各接口对应字段匹配。
