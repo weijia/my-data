@@ -46,6 +46,8 @@
 | 应用 | WebDAV 路径 | 数据格式文档 |
 |------|-------------|-------------|
 | my-quant（策略） | `strategies/` | [strategy-formats.md](./strategy-formats.md) |
+| my-quant（策略单归档） | `app_data/stocks/` | [strategy-order-archive-format.md](./strategy-order-archive-format.md) |
+| my-quant（成交记录） | `app_data/stocks/trade_records/` | [trade-record-format.md](./trade-record-format.md) |
 | my-quant（趋势） | `trends/` | [trend-judgment-format.md](./trend-judgment-format.md) |
 | my-quant（持仓） | `holdings/` | [holdings-format.md](./holdings-format.md) |
 | my-quant（配置） | `config/` | [config-formats.md](./config-formats.md) |
