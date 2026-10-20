@@ -19,7 +19,8 @@ my-data/
 │   ├── webdav-data-formats.md         # WebDAV 同步架构
 │   ├── utags-bookmark-format.md       # utags 书签格式
 │   ├── kids-point-format.md           # kids-point 格式
-│   └── my-quant-strategy-format.md    # my-quant 策略格式
+│   ├── my-quant-strategy-format.md    # my-quant 策略格式
+│   └── bookkeeping-format.md          # onenav 记账应用格式
 ├── app_data/                          # 应用数据（推荐）
 │   └── {项目名}/                      # 每个应用一个子目录
 ├── stocks/                            # 股票基础数据

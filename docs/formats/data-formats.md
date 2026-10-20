@@ -19,7 +19,8 @@ my-data/
 │   ├── webdav-data-formats.md         # WebDAV 同步架构
 │   ├── utags-bookmark-format.md       # utags 书签格式索引
 │   ├── kids-point-format.md           # kids-point 格式索引
-│   └── my-quant-strategy-format.md    # my-quant 策略格式索引
+│   ├── my-quant-strategy-format.md    # my-quant 策略格式索引
+│   └── bookkeeping-format.md          # onenav 记账应用格式索引
 ├── app_data/                          # 应用数据（推荐）
 │   └── {项目名}/                      # 每个应用一个子目录
 ├── stocks/                            # 股票基础数据
@@ -58,6 +59,7 @@ my-data/
 |------|------|----------|
 | [utags](https://github.com/weijia/utags) | WebDAV 书签标签管理 | [utags-bookmark-format.md](./utags-bookmark-format.md) |
 | [kids-point](https://github.com/weijia/kids-point) | 儿童积分奖励系统 | [kids-point-format.md](./kids-point-format.md) |
+| [onenav](https://github.com/weijia/onenav) | 内置记账小应用（流水 + 价格） | [bookkeeping-format.md](./bookkeeping-format.md) |
 | my-quant | 策略管理与条件单 | [my-quant-strategy-format.md](./my-quant-strategy-format.md) |
 
 ## WebDAV 同步
