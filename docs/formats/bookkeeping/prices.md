@@ -1,6 +1,9 @@
-# Bookkeeping 价格记录（prices）
+# Bookkeeping 价格记录（PriceRecord）
 
-价格记录是 `BookkeepingData.prices` 数组的元素，用 **判别联合**（discriminated union）按 `kind` 字段区分三种类型。
+价格记录是统一记录模型中 `type: 'price'` 的一条，用 **判别联合**（discriminated union）按 `kind` 字段区分三种类型。
+
+> 旧版该数据位于 `BookkeepingData.prices` 数组；新版每条价格记录带顶层 `type: 'price'`，
+> 与流水、订单共同组成统一的 `BookkeepingRecord[]`。
 
 ## 三种类型
 
@@ -14,10 +17,11 @@
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `id` | `string` | 是 | 唯一 ID（时间戳字符串） |
-| `kind` | `'item' \| 'combo' \| 'voucher'` | 是 | 类型判别字段 |
+| `type` | `'price'` | 是 | 记录类型，固定为 `price` |
+| `id` | `string` | 是 | 唯一 ID（时间戳-随机串） |
+| `kind` | `'item' \| 'combo' \| 'voucher'` | 是 | 子类型判别字段 |
 | `date` | `string` | 否 | 日期，格式 `YYYY-MM-DD`；缺省/非法时回退当天 |
-| `source` | `string` | 否 | 来源（如商家名） |
+| `source` | `string` | 否 | 来源；订单提取的价格记录为 `京东订单` / `淘宝订单`，手动记录一般为商家名 |
 | `createdAt` | `number` | 否 | 创建时间，毫秒级 Unix 时间戳；缺省为写入时刻 |
 
 ---
@@ -26,6 +30,7 @@
 
 ```json
 {
+  "type": "price",
   "kind": "item",
   "id": "1746000000000",
   "date": "2026-10-20",
@@ -49,6 +54,7 @@
 
 ```json
 {
+  "type": "price",
   "kind": "combo",
   "id": "1746000000001",
   "date": "2026-10-20",
@@ -84,6 +90,7 @@
 
 ```json
 {
+  "type": "price",
   "kind": "voucher",
   "id": "1746000000002",
   "date": "2026-10-20",
@@ -113,6 +120,12 @@
 - `voucher` 缺 `name`、`cost`、`faceValue` 任一，或金额非正数 → 跳过。
 - `date` 非 `YYYY-MM-DD` 时回退当天；`source` 为空时省略。
 
+## 订单提取的价格记录
+
+导入电商订单时，订单商品中「有单价」者（`price > 0.01`，过滤红包占位）会按商品名生成 `kind: 'item'`
+的价格记录，`source` 为 `京东订单` / `淘宝订单`；同一商品多次出现时按商品名去重、保留最新报价。
+详见 [orders.md §4](./orders.md#4-价格提取订单--报价)。
+
 ## 导出格式
 
 导出时通过 `toPriceExportShape()` 生成，可选字段缺失时显式置为 `null`，字段顺序按 `kind` 区分：
@@ -125,7 +138,5 @@
   { "kind": "voucher", "date": "2026-10-20", "name": "超市券", "cost": 75, "faceValue": 100, "source": null }
 ]
 ```
-
-> 导出文件名为 `bookkeeping-price-{YYYY-MM-DD}.json`（仅含当前价格 Tab 的数据）。
 
 [返回索引](../bookkeeping-format.md)

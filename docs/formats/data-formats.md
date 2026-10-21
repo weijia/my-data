@@ -59,7 +59,7 @@ my-data/
 |------|------|----------|
 | [utags](https://github.com/weijia/utags) | WebDAV 书签标签管理 | [utags-bookmark-format.md](./utags-bookmark-format.md) |
 | [kids-point](https://github.com/weijia/kids-point) | 儿童积分奖励系统 | [kids-point-format.md](./kids-point-format.md) |
-| [onenav](https://github.com/weijia/onenav) | 内置记账小应用（流水 + 价格） | [bookkeeping-format.md](./bookkeeping-format.md) |
+| [onenav](https://github.com/weijia/onenav) | 内置记账小应用（流水 + 价格 + 电商订单，统一 type 模型） | [bookkeeping-format.md](./bookkeeping-format.md) |
 | my-quant | 策略管理与条件单 | [my-quant-strategy-format.md](./my-quant-strategy-format.md) |
 
 ## WebDAV 同步
