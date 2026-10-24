@@ -20,6 +20,7 @@ my-data/
 │   ├── utags-bookmark-format.md       # utags 书签格式索引
 │   ├── kids-point-format.md           # kids-point 格式索引
 │   ├── my-quant-strategy-format.md    # my-quant 策略格式索引
+│   ├── host-disk-info-format.md       # 主机与磁盘信息格式（home_cloud 采集）
 │   └── bookkeeping-format.md          # onenav 记账应用格式索引
 ├── app_data/                          # 应用数据（推荐）
 │   └── {项目名}/                      # 每个应用一个子目录
@@ -52,6 +53,7 @@ my-data/
 | `holdings/holdings.default.{timestamp}.json` | 持仓历史 | [holdings-format.md](./holdings-format.md) |
 | `config/window_config.json` | 窗口配置 | [config-formats.md](./config-formats.md#1-窗口配置) |
 | `config/webdav_config.json` | WebDAV 连接配置 | [config-formats.md](./config-formats.md#2-webdav-连接配置) |
+| `ufs-nodes/{uuid}.json`（主机状态）/ `O:\app_data\disks\*` | 主机与磁盘信息（home_cloud 采集） | [host-disk-info-format.md](./host-disk-info-format.md) |
 
 ## 第三方应用数据格式
 
