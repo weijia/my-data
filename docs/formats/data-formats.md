@@ -22,7 +22,8 @@ my-data/
 │   ├── my-quant-strategy-format.md    # my-quant 策略格式索引
 │   ├── host-disk-info-format.md       # 主机与磁盘信息格式（home_cloud 采集）
 │   ├── dir-struct-manifest-format.md  # 目录结构清单（dir-struct-gen 生成 / FluentOS 文件管理器读取）
-│   └── bookkeeping-format.md          # onenav 记账应用格式索引
+│   ├── bookkeeping-format.md          # onenav 记账应用格式索引
+│   └── chat-record-format.md         # 聊天记录保存格式（home_cloud download_chat_media）
 ├── app_data/                          # 应用数据（推荐）
 │   └── {项目名}/                      # 每个应用一个子目录
 ├── stocks/                            # 股票基础数据
@@ -55,6 +56,7 @@ my-data/
 | `config/window_config.json` | 窗口配置 | [config-formats.md](./config-formats.md#1-窗口配置) |
 | `config/webdav_config.json` | WebDAV 连接配置 | [config-formats.md](./config-formats.md#2-webdav-连接配置) |
 | `ufs-nodes/{uuid}.json`（主机状态）/ `O:\app_data\disks\*` | 主机与磁盘信息（home_cloud 采集） | [host-disk-info-format.md](./host-disk-info-format.md) |
+| `app_data/chat-exports/{YYYY-MM}/`（含 `images/`、`videos/`、`chat_{YYYY-MM}.html` + 根目录 `download_state.json` / `media_index.json`） | 聊天记录离线存档（home_cloud download_chat_media） | [chat-record-format.md](./chat-record-format.md) |
 
 ## 第三方应用数据格式
 
