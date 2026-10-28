@@ -178,5 +178,41 @@ FluentOS 文件管理器（[`js/apps/files.js`](https://github.com/weijia/Fluent
 ## 数据来源
 
 - **生成器**：`FluentOS-On-Web/dir-struct-gen/`（本地 Web App，`serve.js` 提供磁盘浏览与上传 API，`app.js` 负责勾选与生成 manifest）
-- **读取侧**：`FluentOS-On-Web/js/apps/files.js`、`FluentOS-On-Web/js/core/remotestorage-client.js`
+- **读取侧**：`FluentOS-On-Web/js/apps/files.js`、`FluentOS-On-Web/js/core/remotestorage-client.js`；以及 onenav 文件浏览器 `src/components/apps/filebrowser/`
 - **设计文档**：`FluentOS-On-Web/remotestorage-fs-plan.md`
+
+## v2：卷级拆分、跨主机去重与深挖标记
+
+> 适用：当同一块物理盘可能被多台主机挂载、希望「目录数据只保存一份、标记跨主机共享」时启用。v1 单文件整树格式仍被读取侧兼容（见下方「读取侧拼装」）。
+
+### 磁盘稳定身份 `.dir-struct-id`
+- 生成器的 `serve.js` 在列盘时，对每块盘的根目录确保存在一个标记文件 `<盘根>/.dir-struct-id`，内容为 UUID v4。
+- 首次见到盘时生成并写入；之后所有系统读到的都是同一串字节 → **跨 OS / 跨协议（含云盘）一致**，从根本上避免「同一块盘在不同主机被当成不同盘」导致的重复。
+- 该标记文件被 `listDir` 过滤，不会进入目录树 / 清单；只读盘或写入失败时回退为 `null`（此时该盘按 `主机::盘符` 命名，不跨主机去重）。
+
+### 清单拆分成「主机索引 + 卷文件」
+`app_data/folders/` 下不再是单一整树文件，而是：
+
+| 文件 | 内容 |
+|------|------|
+| `<host>.json` | 主机索引：`{ version:2, source, generatedAt, generator, mounts:[{ letter, volumeId, file }] }` |
+| `<volumeKey>.json` | 某块物理盘的卷子树：`{ volumeId, name, type:'folder', children:[...], sources:[<hostId>,...] }` |
+
+- `volumeKey` = 该盘 `<盘根>/.dir-struct-id` 的内容（UUID）；`file` 字段 = 对 `volumeKey` 做文件名安全化（`[^A-Za-z0-9._-]` → `_`）后的名字，读取侧据此定位卷文件。
+- 同一块盘在多台主机上**只存一份** `<volumeKey>.json`，各自主机索引的 `mounts` 都指向它 → **目录数据零重复**。
+- 上传时生成器先 `GET` 已有卷文件，再与本次选择**按 `name` 并集合并**（`sources` 累加各贡献主机），然后 `PUT` 回；因此不同主机对同一块盘的选择会累加。
+
+### 读取侧拼装
+读取侧读取 `app_data/folders/` 全部 `.json`，按形态分类：
+- 含 `mounts` 数组 → 主机索引，按 `mounts[].file` 取出对应卷文件拼成完整树；
+- 含 `volumeId` + `children`（且无 `root`/`mounts`） → 卷文件，收入卷映射；
+- 含 `root` → legacy v1 整树清单，原样透传（向后兼容）。
+
+驱动层节点携带 `volumeId`，供深挖标记命名空间与「同盘多主机」识别。
+
+### 深挖标记 `folder-deepen`
+- 浏览器里给某目录打「继续解析下一层」标记 → 写入 `app_data/folder-deepen/<key>.json`：`{ marks:[ "E:/Photos/2024", ... ] }`。
+- `key` = 该目录所属驱动层的 `volumeId`（跨主机共享）；回退为 `主机::盘符`。
+- `marks` 中的路径为 host-relative（盘符 + `/` 连接的嵌套目录名）。
+- 生成器下次「上传」时读取这些标记，对标记目录**按需多读一层真实磁盘**并入卷文件，然后**清空（消耗）**标记文件。标记仅下次生成生效一次。
+
