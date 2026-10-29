@@ -56,7 +56,7 @@ my-data/
 | `config/window_config.json` | 窗口配置 | [config-formats.md](./config-formats.md#1-窗口配置) |
 | `config/webdav_config.json` | WebDAV 连接配置 | [config-formats.md](./config-formats.md#2-webdav-连接配置) |
 | `ufs-nodes/{uuid}.json`（主机状态）/ `O:\app_data\disks\*` | 主机与磁盘信息（home_cloud 采集） | [host-disk-info-format.md](./host-disk-info-format.md) |
-| `app_data/chat-exports/{YYYY-MM}/`（含 `images/`、`videos/`、`chat_{YYYY-MM}.html` + 根目录 `download_state.json` / `media_index.json`） | 聊天记录离线存档（home_cloud download_chat_media） | [chat-record-format.md](./chat-record-format.md) |
+| `app_data/chat-exports/{YYYY-MM}/`（含 `images/`、`videos/`、`chat_{YYYY-MM}.html`、`media_index.json`；根目录另有 `download_state.json`） | 聊天记录离线存档（home_cloud download_chat_media） | [chat-record-format.md](./chat-record-format.md) |
 
 ## 第三方应用数据格式
 
