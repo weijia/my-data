@@ -14,10 +14,8 @@
 - **目标**：将聊天记录（文本 + 图片 + 视频）离线保存为可本地浏览的 HTML，媒体文件独立存储，便于增量更新与单独管理。
 - **数据来源**：Supabase `messages` 表（经邀请码定位 `chat_rooms`），按 `created_at` 分页拉取。
 - **存储方式**：本地文件目录（默认 `./chat_exports`，集成到 my-data 时置于 `app_data/chat-exports/`）。
-- **增量机制**：通过 `download_state.json`（根目录，跨月）记录上次下载时间/消息 ID；媒体索引 `media_index.json` **按月拆分**存放于各月度目录，记录当月媒体 URL→本地路径映射，避免单文件随年份无限膨胀。
+- **增量机制**：通过 `download_state.json`（根目录，跨月）记录上次下载时间/消息 ID；媒体索引 `media_index.json`（**存档根目录**，与 `download_state.json` 同层）记录媒体 URL→本地路径映射，作为下载去重台账，避免重复下载（见 §5.2）。
 - **非目标**：不做并发下载、不做 Hash 完整性校验（见设计文档 §1.3）。
-
-> **实现状态**：本文档为 my-data 侧的**目标格式规范**。当前 `home_cloud` 脚本（`scripts/download_chat_media.py`）仍按「根目录单份 `media_index.json`」实现；落地「按月拆分索引」需同步调整其 `StateManager` 的 `load_media_index` / `save_media_index`（改为按月份读写），`local_path` 由相对存档根目录改为相对月度目录。
 
 ---
 
@@ -31,7 +29,7 @@
 | 视频目录 | 子目录 | `{YYYY-MM}/videos/` | 当月视频存储 |
 | 月度 HTML | 文件 | `{YYYY-MM}/chat_{YYYY-MM}.html` | 当月聊天记录浏览页 |
 | 下载状态 | 文件 | `download_state.json` | 进度与游标（**存档根目录**，跨月，体积小） |
-| 媒体索引 | 文件 | `{YYYY-MM}/media_index.json` | 当月媒体 URL→本地路径映射（**按月拆分**，避免单文件过大） |
+| 媒体索引 | 文件 | `media_index.json` | 媒体 URL→本地路径映射（**存档根目录**，与 `download_state.json` 同层，下载器去重台账） |
 
 ---
 
@@ -47,15 +45,14 @@ chat_exports/
 │   ├── videos/
 │   │   ├── video_001_x1y2z3.mp4
 │   │   └── ...
-│   ├── media_index.json          # 当月媒体索引（URL→本地路径映射）
 │   └── chat_2024-01.html
 ├── 2024-02/
 │   ├── images/
 │   ├── videos/
-│   ├── media_index.json
 │   └── chat_2024-02.html
 ├── ...
-└── download_state.json            # 下载进度/游标（跨月，留在根目录）
+├── download_state.json            # 下载进度/游标（跨月）
+└── media_index.json               # 媒体 URL→本地路径映射（下载器去重台账）
 ```
 
 ---
@@ -114,9 +111,9 @@ chat_exports/
 
 > 时间格式统一：`last_download_time` 内部规整为 `+00:00` → `Z`（见脚本 `_normalize_time_format`）。
 
-### 5.2 {YYYY-MM}/media_index.json
+### 5.2 media_index.json
 
-媒体文件索引，避免**当月**重复下载，按月份拆分存储，结构对应 `MediaIndex` dataclass。每个月度目录各持有一份 `media_index.json`，避免随年份累积导致单文件过大。
+媒体文件索引，避免重复下载，结构对应 `MediaIndex` dataclass。位于**存档根目录**，与 `download_state.json` 同层——它只是下载器的内部去重台账，**不属于聊天记录内容**，不进入月度目录（保持月度目录为纯记录）；其他程序无需产出或读取它。
 
 ```json
 {
@@ -141,17 +138,15 @@ chat_exports/
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `media_files` | `object` | 是 | 键为媒体原始 URL，值为该媒体的元数据 |
-| `media_files.{url}.local_path` | `string` | 是 | 相对**月度目录**的本地路径（不含 `YYYY-MM/` 前缀），如 `images/img_001_a1b2c3.jpg` |
+| `media_files` | `object` | 是 | 键为媒体原始 URL，值为该媒体的元数据（**全量累计**，跨月共享，去重范围覆盖所有月份） |
+| `media_files.{url}.local_path` | `string` | 是 | 相对**月度目录**的本地路径（不含 `YYYY-MM/` 前缀），如 `images/img_001_a1b2c3.jpg`；HTML 与媒体同处月度目录，故直接以该相对路径引用 |
 | `media_files.{url}.message_id` | `string` | 是 | 关联的消息 ID |
 | `media_files.{url}.downloaded_at` | `string` | 是 | 下载时间（`datetime.now().isoformat()`） |
 | `media_files.{url}.file_size` | `number` | 是 | 文件字节大小 |
 | `created_at` | `string` | 是 | 索引创建时间 |
 | `updated_at` | `string` | 是 | 索引最后更新时间 |
 
-**重复下载判定（当月）**：下载前先查 `media_url` 是否在本月 `media_index.json` 的 `media_files` 中（命中则直接用 `local_path`）；同时若本地文件已存在也跳过。
-
-> **取舍说明（按月拆分索引）**：索引拆分后，去重范围从「全量」缩小为「当月」。同一媒体 URL 若跨月份再次出现（如同一张图在 1 月和 3 月都发过），会各自下载到对应月份目录、不再全局去重。这是为「单文件体积有界」做的取舍——跨月重复媒体在实践中很少见，且即便重复下载，单条媒体的磁盘代价远小于一个无限膨胀的索引文件。如需保留跨月去重，可在下载时选择性读入其它月份的索引（仅用于查重，不合并写入）。
+**重复下载判定**：下载前先查 `media_url` 是否在 `media_files` 中（命中则直接用 `local_path`，全量去重，跨月同一 URL 也只下载一次）；同时若本地文件已存在也跳过。
 
 ---
 
@@ -222,7 +217,7 @@ python download_chat_media.py --status     # 查看下载状态
 
 | 模块 | 函数 | 生成内容 |
 |------|------|----------|
-| `download_chat_media.py` → `StateManager` | `load_state()` / `save_state()`（根目录）/ `load_media_index(month)` / `save_media_index(month)` | `download_state.json`（根目录）、各月度目录下的 `media_index.json` |
+| `download_chat_media.py` → `StateManager` | `load_state()` / `save_state()` / `load_media_index()` / `save_media_index()` | `download_state.json`、`media_index.json`（均在存档根目录） |
 | `download_chat_media.py` → `DirectoryManager` | `ensure_month_directory()` / `get_html_path()` / `get_relative_media_path()` | 月度目录与相对路径 |
 | `download_chat_media.py` → `MediaDownloader` | `download_media()` / `get_file_extension()` / `generate_filename()` | 媒体落盘与命名 |
 | `download_chat_media.py` → `HTMLGenerator` | `generate_html()` / `_generate_message_content()` | 月度 HTML 生成 |
