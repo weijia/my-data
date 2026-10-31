@@ -70,6 +70,11 @@
 | `createTime` | `string` | 是* | **起始时间**：创建该单的时间，ISO 8601 格式（含时区）。按月分文件即取此字段的 `YYYY-MM`。服务端任务缺 `time` 时补建记录为 `null` |
 | `status` | `string` | 否 | 策略状态，创建时通常为 `"active"`；后续按 `id` 查询状态回填，取值见 [状态查询与状态取值](#状态查询与状态取值) |
 | `origin` | `string` | 是 | **记录来源**：`"plugin"` = 本插件创建时写入；`"server"` = 「自动同步全部」时按服务端任务补建（非本插件创建，或创建时保存失败） |
+| `rawTask` | `object` | 否 | 服务端原始任务 JSON 快照（来自 `getTaskList` 的 `content[]` 项或 `task/detail` 的 `info.taskInfo` 整条任务对象），作为后续扩展字段与跨系统核对的参考。`origin="plugin"` 创建时该字段为 `null`，首次 `refreshStatus` 回填时写入；**不参与业务字段映射** |
+
+> **成交/委托明细（entrusts）**：记录的「实际成交」由 `todayEntrust` 接口按 `taskId` 拉取（方正 `getTaskList` 的任务对象里**不含成交明细**，之前误用的 `buyTimes/saleTimes/profit` 等任务级字段并非真实成交），写入为 `entrusts` 数组，见下方「成交/委托记录（entrusts）」。创建时（含 `origin="plugin"`）该字段为 `null`，仅在「自动同步全部」每轮 `refreshStatus` 回填时写入。
+>
+> **原始成交/委托记录（rawEntrusts）**：与 `entrusts` **并存**的「原样」字段。两者数据同源（`todayEntrust` 的 `info.content[]`），但 `entrusts` 只保留归一化后的 13 个挑选字段，`rawEntrusts` 则把接口返回的每一条记录**原样**（不挑字段、不做字段重命名、时间不转 ISO）整体保存，便于以后核对字段、应对接口字段变化。同样按委托 `id` 跨同步累积合并；创建时为 `null`，仅在 `refreshStatus` 回填时写入。
 
 ---
 
@@ -129,6 +134,83 @@
 
 ---
 
+## 成交/委托记录（entrusts，来自 todayEntrust）
+
+记录的「实际成交 / 委托」明细由方正 `todayEntrust` 接口按 `taskId` 返回（见 [状态查询与状态取值](#状态查询与状态取值) 的接口表），**不在** `getTaskList` 的任务对象里（任务对象上虽有 `buyTimes/saleTimes/profit` 等字段，但那不是成交明细，不得作为实际成交使用）。`refreshStatus` 每轮按 `id` 拉取后，以 `entrusts` 数组写入 / 累积合并进对应记录；普通创建保存（`origin="plugin"`）时该字段为 `null`。
+
+> ⚠️ `todayEntrust` 只返回**当日**委托。不同步之间靠委托 `id` 去重合并，因此只要每天都跑一次「自动同步全部」，历史成交会被逐步累积保留；如需一次性补齐很久以前的历史成交，需另接历史委托接口（当前未实现）。
+
+单条委托记录字段（来自 `todayEntrust` 的 `info.content[]` 项）：
+
+```json
+{
+  "id": "4623392568",
+  "taskId": "1881433463",
+  "time": "2026-10-19T11:30:12.000+08:00",
+  "stockCode": "002327",
+  "stockName": "富安娜",
+  "price": 6.04,
+  "priceType": "限价",
+  "amount": 3200.0,
+  "direction": 2,
+  "side": "sell",
+  "status": 55,
+  "statusName": "已成",
+  "orderId": "1881433463-1931020-1792373412.5"
+}
+```
+
+| 字段 | 类型 | 必选 | 说明 |
+|------|------|------|------|
+| `id` | `string` | 否 | 委托/成交记录 ID（按此去重合并） |
+| `taskId` | `string` | 否 | 所属策略任务 ID |
+| `time` | `string` | 否 | 委托时间，epoch 毫秒转 ISO 8601（含时区）；无则为 `null` |
+| `stockCode` | `string` | 否 | 股票代码 |
+| `stockName` | `string` | 否 | 股票名称 |
+| `price` | `number` | 否 | 委托/成交价格 |
+| `priceType` | `string` | 否 | 价格类型，如 `"限价"` |
+| `amount` | `number` | 否 | 委托数量 |
+| `direction` | `number` | 否 | 委托方向原始值（服务端 `entrust_direction`）：`1`=买入 / `2`=卖出 |
+| `side` | `string` | 否 | 方向语义：`"buy"` / `"sell"`（由 `direction` 映射，其它值 `null`） |
+| `status` | `number` | 否 | 委托状态原始值 |
+| `statusName` | `string` | 否 | 委托状态名，如 `"已成"` / `"已撤"` |
+| `orderId` | `string` | 否 | 委托订单号 |
+
+> 原始任务对象（来自 `getTaskList` / `task/detail`）仍作为 `rawTask` 快照保留在公共字段里，供扩展与核对，但它**不含**上述成交明细。
+
+### 原始成交/委托记录（rawEntrusts，todayEntrust 原样）
+
+`rawEntrusts` 与 `entrusts` 同源（都来自 `todayEntrust` 的 `info.content[]`），但它是**原始响应原样保留**的一份，未经 `normalizeEntrust` 的字段挑选与重命名：
+
+- `entrusts`：归一化数组，只含 `id`/`taskId`/`time`/`stockCode`/`stockName`/`price`/`priceType`/`amount`/`direction`/`side`/`status`/`statusName`/`orderId` 共 13 个字段，`time` 已转本地 ISO 8601。
+- `rawEntrusts`：接口返回的原始对象数组（如 `stock_code`、`entrust_direction`、`time` 为 epoch 毫秒、`priceType`、以及任何接口新增/未知的字段都原样保留），仅按 `id` 去重合并，不做其它处理。
+
+```json
+{
+  "entrusts": [ { "id": "4623392568", "side": "sell", "time": "2026-10-19T11:30:12.000+08:00", "...": "..." } ],
+  "rawEntrusts": [
+    {
+      "id": 4623392568,
+      "taskId": 1881433463,
+      "stock_code": "002327",
+      "stock_name": "富安娜",
+      "price": 6.04,
+      "priceType": "限价",
+      "amount": 3200.0,
+      "entrust_direction": 2,
+      "time": 1760849412000,
+      "status": 55,
+      "statusName": "已成",
+      "orderId": "1881433463-1931020-1792373412.5"
+    }
+  ]
+}
+```
+
+> 两者按**同一套 `id`** 合并（都来自 `info.content[].id`），因此 `rawEntrusts[i]` 与 `entrusts[i]` 通常一一对应；若接口字段映射或类型有出入，以 `rawEntrusts` 为准做核对。`rawEntrusts` 不参与任何业务字段映射，纯属「留底 / 扩展」用途。
+
+---
+
 ## 起始时间与起始价格（触发判定）
 
 条件单的触发由**起始时间 + 起始价格**共同决定：`createTime` 为起始时刻，`startPrice` 为创建时的实时价格，作为触发判定的起始基准价；再结合 `deltaPercentage` / `deltaAmount` 描述触发条件。
@@ -148,6 +230,7 @@
 | 条件单列表 | `GET /qt/task/getTaskList?sName=condition&statusList=0&statusList=1&statusList=2&page=1&pageSize=2000` | 返回 `info.content[]`，含 `id`、`status` |
 | 任务详情 | `GET /qt/task/detail?id={id}&isMock=false` | 按 `id` 查单条详情（网格策略详情走此接口） |
 | 策略列表（全量） | `GET /qt/strategy/list` | `content[]` 含 `id`、`status`、`sname` |
+| 今日委托/成交 | `GET /qt/user/todayEntrust?pageNum=1&pageSize=200&taskId={id}` | 按 `taskId` 返回**当日**委托/成交明细（`info.content[]`）；**这是「实际成交」的唯一真实来源**，`getTaskList` 任务对象里不含成交 |
 
 **网格单怎么认**：服务端任务用 `sname` 区分，网格实测有两种取值 `GridTrading`（`data/grid-example.md`）与 `AdvancedGridTrading`（`data/grid_strategy_for_credit_account.json`），两者都算网格；其余 `sname`（如 `strategy_bottom_buy` / `strategy_top_sell`）为条件单。注意**网格单没有条件单那样的列表接口**（`getTaskList` 只返回 `sName=condition`），只能按已知 `id` 调 `task/detail` 逐条取。
 
@@ -156,7 +239,7 @@
 - 内部枚举另有 `triggered`（已触发）/`canceled`（已取消）/`expired`（已过期）/`failed`（失败），但**无对应的服务器原始值样本**，回填时遇到未知值一律走 `unknown` 兜底，不猜。
 - 停止接口：`POST /qt/task/stop`。
 
-> **实现状态**：方正侧已实现（`vue-dialog-userscript` 在「自动同步全部」每轮解析完成后，用本轮已获取到的服务端任务回填/补建 `orders/` 记录：`id` 命中则更新 `status`，未命中则补建一条并标记 `origin="server"`；获取不到的不动。详见其 `docs/api/OrderCreateSaver-API.md`）。平安侧**未实现**（等 id 映射确认后再说）。
+> **实现状态**：方正侧已实现（`vue-dialog-userscript` 在「自动同步全部」每轮解析完成后，用本轮已获取到的服务端任务回填/补建 `orders/` 记录：`id` 命中则更新 `status`、并按下述 `todayEntrust` 回填 `entrusts`（成交/委托明细，归一化）与 `rawEntrusts`（接口原样并存）、以及原始任务快照 `rawTask`；未命中则补建一条并标记 `origin="server"`（同样带 `entrusts`、`rawEntrusts` 与 `rawTask`）；获取不到的不动。详见其 `docs/api/OrderCreateSaver-API.md`）。平安侧**未实现**（等 id 映射确认后再说）。
 
 ### 平安（`provider` = `pingan`）
 
@@ -192,7 +275,9 @@
 | `startPrice` | `DECIMAL(12,3)` | 起始价格 |
 | `createTime` | `TIMESTAMP` / `DATETIME` | 起始时间，建议索引或按月分区 |
 | `status` | `VARCHAR(16)` | 枚举，可后续 update 回填 |
-| 专有字段 | 见上 | 展开为独立列，或整体存入 `JSON` 列 |
+| 成交/委托明细 | 见「成交/委托记录（entrusts）」节 | `entrusts` 建议存为 `JSON`/`TEXT` 列（数组，含每条委托的明细）；如需分析可把关键字段（`side`/`amount`/`price`/`statusName`/`time`）展开为独立列 |
+| 原始成交/委托明细 | 见「原始成交/委托记录（rawEntrusts）」节 | `rawEntrusts` 建议存为 `JSON`/`TEXT` 列（接口原样数组），与 `entrusts` 并存留底；不参与索引与字段映射 |
+| `rawTask` | `JSON` / `TEXT` | 服务端原始任务快照，整体存入，不参与索引 |
 
 ## 相关文档
 
