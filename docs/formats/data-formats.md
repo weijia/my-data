@@ -19,7 +19,11 @@ my-data/
 │   ├── webdav-data-formats.md         # WebDAV 同步架构
 │   ├── utags-bookmark-format.md       # utags 书签格式索引
 │   ├── kids-point-format.md           # kids-point 格式索引
-│   └── my-quant-strategy-format.md    # my-quant 策略格式索引
+│   ├── my-quant-strategy-format.md    # my-quant 策略格式索引
+│   ├── host-disk-info-format.md       # 主机与磁盘信息格式（home_cloud 采集）
+│   ├── dir-struct-manifest-format.md  # 目录结构清单（dir-struct-gen 生成 / FluentOS 文件管理器读取）
+│   ├── bookkeeping-format.md          # onenav 记账应用格式索引
+│   └── chat-record-format.md         # 聊天记录保存格式（home_cloud download_chat_media）
 ├── app_data/                          # 应用数据（推荐）
 │   └── {项目名}/                      # 每个应用一个子目录
 ├── stocks/                            # 股票基础数据
@@ -51,6 +55,8 @@ my-data/
 | `holdings/holdings.default.{timestamp}.json` | 持仓历史 | [holdings-format.md](./holdings-format.md) |
 | `config/window_config.json` | 窗口配置 | [config-formats.md](./config-formats.md#1-窗口配置) |
 | `config/webdav_config.json` | WebDAV 连接配置 | [config-formats.md](./config-formats.md#2-webdav-连接配置) |
+| `ufs-nodes/{uuid}.json`（主机状态）/ `O:\app_data\disks\*` | 主机与磁盘信息（home_cloud 采集） | [host-disk-info-format.md](./host-disk-info-format.md) |
+| `app_data/chat-exports/{YYYY-MM}/`（含 `images/`、`videos/`、`chat_{YYYY-MM}.html`；根目录另有 `download_state.json` / `media_index.json` 下载器台账） | 聊天记录离线存档（home_cloud download_chat_media） | [chat-record-format.md](./chat-record-format.md) |
 
 ## 第三方应用数据格式
 
@@ -58,7 +64,9 @@ my-data/
 |------|------|----------|
 | [utags](https://github.com/weijia/utags) | WebDAV 书签标签管理 | [utags-bookmark-format.md](./utags-bookmark-format.md) |
 | [kids-point](https://github.com/weijia/kids-point) | 儿童积分奖励系统 | [kids-point-format.md](./kids-point-format.md) |
+| [onenav](https://github.com/weijia/onenav) | 内置记账小应用（流水 + 价格 + 电商订单，统一 type 模型） | [bookkeeping-format.md](./bookkeeping-format.md) |
 | my-quant | 策略管理与条件单 | [my-quant-strategy-format.md](./my-quant-strategy-format.md) |
+| [FluentOS-On-Web](https://github.com/weijia/FluentOS-On-Web)（dir-struct-gen / 文件管理器） | 本地目录结构清单（RemoteStorage 形态 B manifest，文件夹树 + 标签，只读） | [dir-struct-manifest-format.md](./dir-struct-manifest-format.md) |
 
 ## WebDAV 同步
 

@@ -19,7 +19,10 @@ my-data/
 │   ├── webdav-data-formats.md         # WebDAV 同步架构
 │   ├── utags-bookmark-format.md       # utags 书签格式
 │   ├── kids-point-format.md           # kids-point 格式
-│   └── my-quant-strategy-format.md    # my-quant 策略格式
+│   ├── my-quant-strategy-format.md    # my-quant 策略格式
+│   ├── dir-struct-manifest-format.md  # 目录结构清单（dir-struct-gen 生成 / FluentOS 文件管理器读取）
+│   ├── bookkeeping-format.md          # onenav 记账应用格式
+│   └── chat-record-format.md         # 聊天记录保存格式（home_cloud download_chat_media）
 ├── app_data/                          # 应用数据（推荐）
 │   └── {项目名}/                      # 每个应用一个子目录
 ├── stocks/                            # 股票基础数据
