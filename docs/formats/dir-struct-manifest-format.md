@@ -18,13 +18,15 @@
 
 | 项目 | 说明 |
 |------|------|
-| **传输协议** | RemoteStorage（HTTP `GET` / `PUT`，`Authorization: Bearer <token>`） |
-| **默认存储目录** | `/app_data/folders/`（生成器「基础路径」字段 `rsBase` 默认值） |
-| **默认文件名** | 本机主机名（`os.hostname()`），如 `LAPTOP-91PR81Q2` |
-| **完整上传目标** | `<服务器地址>/app_data/folders/<清单文件名>` |
-| **鉴权** | `Bearer` Token（与 RemoteStorage 连接共用） |
+| **存储后端** | 通过 zen-fs 的 **app-data 数据组**配置：`<sync-group-configurator>`（来自 zen-fs-config-ui）自动建立 RemoteStorage 后端，`basePath` 固定为 `app_data/folders/`，无需用户手填 RemoteStorage 地址 / Token。底层传输协议仍是 RemoteStorage |
+| **默认存储基目录** | `app_data/folders/`（app-data 数据组 RemoteStorage 后端的 `basePath`） |
+| **清单目录** | `<基>/struct/`：主机索引与卷分片（v2 拆分存储，见下文「v2」）均存放于此 |
+| **深挖标记目录** | `<基>/folder-deepen/`：深挖标记文件存放于此 |
+| **默认文件名** | 主机索引 = 本机主机名（`os.hostname()`），如 `LAPTOP-91PR81Q2`；卷分片 = `<volumeId>.<createdTime>.json`（见 v2） |
+| **完整上传目标** | `<服务器地址>/app_data/folders/struct/<主机名>.json`（主机索引） |
+| **鉴权** | `Bearer` Token（与 RemoteStorage 连接 / app-data 数据组共用） |
 
-> **文件名约定（重要）**：生成器默认把清单文件名设为「主机名」且**不带 `.json` 后缀**；而 FluentOS 文件管理器读取侧的「**清单文件留空 → 自动扫描 `basePath` 下所有 `.json`**」逻辑只识别 `.json` 文件。因此，若希望读取侧能自动发现，请把生成器的「清单文件名」显式写成 `<主机名>.json`（带后缀）；或在读取侧「清单文件」字段里手动填 `<主机名>`（无后缀，与上传名严格一致）。
+> **文件名约定（重要）**：v2 下清单文件名分两类——主机索引为「`<主机名>.json`」（**带后缀**，如 `LAPTOP-91PR81Q2.json`），卷分片为 `<volumeId>.<createdTime>.json`。读取侧在 `struct/` 目录里按**形态**区分两类文件（含 `mounts` 数组 → 主机索引；含 `volumeId` + `children` → 卷分片），并不依赖具体命名；旧版单文件卷（`<volumeKey>.json`）与 v1 整树（含 `root`）同样被识别。若改用「单清单文件」模式，请在读取侧「清单文件」字段填与上传名严格一致的路径（如 `struct/LAPTOP-91PR81Q2.json`）。
 >
 > 生成器也支持**下载 / 复制**清单到本地任意位置（不依赖 RemoteStorage），此时建议同样保存为 `.json` 以便通用程序解析。
 
@@ -201,6 +203,8 @@ FluentOS 文件管理器（[`js/apps/files.js`](https://github.com/weijia/Fluent
 3. 清单被 `fetchManifest` 读取后**校验 `root.type === "folder"`**，通过则把整棵 `root.children` 渲染为只读目录树。
 4. 远程节点全部**只读**：右键仅提供「打开 / 刷新 / 属性」，禁止新建 / 重命名 / 拖入。
 
+> **onenav 文件浏览器（已实现 v2 读取）**：通过 `getFoldersBase()`（设置项，默认 `app_data/folders`，须与 dir-struct-gen 数据组后端 `basePath` 一致）定位基目录，自动读取 `<基>/struct/` 全部清单、按「分片合并规则」合成目录树；深挖标记从 `<基>/folder-deepen/` 读取。该路径对接本文档 v2 的全部语义（主机索引、`volumeId` 去重、并集合并、`mtime` 不参与取舍等），见 `src/components/apps/filebrowser/` 的 `fetch.ts` / `merge.ts` / `types.ts`。
+
 ## 其他程序如何加载
 
 清单是**标准 JSON**，任何语言/框架均可消费：
@@ -225,13 +229,13 @@ FluentOS 文件管理器（[`js/apps/files.js`](https://github.com/weijia/Fluent
 - 该标记文件被 `listDir` 过滤，不会进入目录树 / 清单；只读盘或写入失败时回退为 `null`（此时该盘按 `主机::盘符` 命名，不跨主机去重）。
 
 ### 清单拆分成「主机索引 + 卷文件（可分多份）」
-`app_data/folders/` 下不再是单一整树文件，而是：
+`app_data/folders/struct/` 下不再是单一整树文件，而是（清单统一放在基目录的 `struct/` 子目录，与深挖标记所在的 `folder-deepen/` 分开）：
 
 | 文件 | 内容 |
 |------|------|
-| `<host>.json` | 主机索引：`{ version:2, source, generatedAt, generator, mounts:[{ volumeId, files }] }` |
-| `<volumeId>.<createdTime>.json` | 某块盘的**分片**（每次生成一份，以毫秒时间戳 `createdTime` 命名）：`{ volumeId, name, type:'folder', part:{id,revision,generatedAt}, children:[...], sources:[<hostId>] }`。`createdTime` 取自 `part.generatedAt`，每次上传都不同 → 同一卷在 RS 上**累积多份历史分片、互不覆盖** |
-| `<volumeKey>.json`（历史遗留） | 旧版单文件卷（无时间戳的早期生成物）：结构同分片但没有 `part`；读取侧会一并纳入合并，不必手工迁移 |
+| `<host>.json` | 主机索引（位于 `struct/`）：`{ version:2, source, generatedAt, generator, mounts:[{ volumeId, files }] }` |
+| `<volumeId>.<createdTime>.json` | 某块盘的**分片**（位于 `struct/`；每次生成一份，以毫秒时间戳 `createdTime` 命名）：`{ volumeId, name, type:'folder', part:{id,revision,generatedAt}, children:[...], sources:[<hostId>] }`。`createdTime` 取自 `part.generatedAt`，每次上传都不同 → 同一卷在 RS 上**累积多份历史分片、互不覆盖** |
+| `<volumeKey>.json`（历史遗留） | 旧版单文件卷（无时间戳的早期生成物，位于 `struct/`）：结构同分片但没有 `part`；读取侧会一并纳入合并，不必手工迁移 |
 
 - `volumeKey` = 安全化后的卷标识：有 `volumeId` 时即 `volumeId`（UUID），取不到时回退 `主机::盘符`。用作分片文件名前缀与同前缀聚合依据；`[^A-Za-z0-9._-]` → `_` 安全化。
 - 分片文件名 = `<volumeKey>.<createdTime>.json`：`createdTime` 为**本次生成的毫秒级 epoch**（`part.generatedAt`）。每次生成都带全新时间戳，所以**再上传不会覆盖以前生成的文件**——同一块盘会在 RS 上累积多份历史快照。
@@ -241,7 +245,7 @@ FluentOS 文件管理器（[`js/apps/files.js`](https://github.com/weijia/Fluent
 - 分片文件名**不参与合并判定**——合并只看文件内容里的 `volumeId` 与 `part`，因此重命名分片不会打断合并，也便于按用途/来源自定义分片名。
 
 ### 读取侧拼装
-读取侧读取 `app_data/folders/` 全部 `.json`，按形态分类：
+读取侧读取 `app_data/folders/struct/` 全部 `.json`（深挖标记不在此目录，见下文 `folder-deepen`），按形态分类：
 - 含 `mounts` 数组 → 主机索引：对每个 `mounts` 项取出 `files` 数组里的**全部分片**（向后兼容旧索引时若没有 `files` 则回退到 `file` 单文件基名），按 `volumeId` 归组后按下面的合并规则合成一棵完整树；
 - 含 `volumeId` + `children`（且无 `root`/`mounts`） → 分片/卷文件，收入卷映射；也可不依赖主机索引，直接把该目录下所有卷文件按 `volumeId` 分组后合并（这样手工放进目录的文件也能被纳入）；
 - 含 `root` → legacy v1 整树清单，原样透传（向后兼容）。
@@ -272,7 +276,7 @@ FluentOS 文件管理器（[`js/apps/files.js`](https://github.com/weijia/Fluent
 > **现状提示**：FluentOS 文件管理器读取侧（`js/apps/files.js` + `js/core/remotestorage-client.js`）目前只实现了「实时目录」与「单个清单文件（校验 `root.type === "folder"`）」两条路径，**尚未实现 v2 的主机索引与分片合并**。v2 的 `mounts` / `files` / 合并语义以本文档为准，读取侧接入时按本节规则实现。
 
 ### 深挖标记 `folder-deepen`
-- 浏览器里给某目录打「继续解析下一层」标记 → 写入 `app_data/folder-deepen/<key>.json`：`{ marks:[ "E:/Photos/2024", ... ] }`。
+- 浏览器里给某目录打「继续解析下一层」标记 → 写入 `app_data/folders/folder-deepen/<key>.json`：`{ marks:[ "E:/Photos/2024", ... ] }`（位于基目录的 `folder-deepen/` 子目录，与清单的 `struct/` 分开，见「存储与传输」）。
 - `key` = 该目录所属驱动层的 `volumeId`（跨主机共享）；回退为 `主机::盘符`。
 - `marks` 中的路径为 host-relative（盘符 + `/` 连接的嵌套目录名）。
 - 生成器下次「上传」时读取这些标记，对标记目录**按需多读一层真实磁盘**并入卷文件，然后**清空（消耗）**标记文件。标记仅下次生成生效一次。
