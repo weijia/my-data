@@ -16,6 +16,7 @@ my-data/
 │   ├── trend-judgment-format.md       # 趋势判断数据
 │   ├── holdings-format.md             # 持仓历史记录
 │   ├── config-formats.md              # 应用配置（窗口/WebDAV）
+│   ├── config-sync-backend-format.md  # 配置同步组（配置仓）后端配置字符串格式
 │   ├── webdav-data-formats.md         # WebDAV 同步架构
 │   ├── utags-bookmark-format.md       # utags 书签格式索引
 │   ├── kids-point-format.md           # kids-point 格式索引
@@ -67,6 +68,7 @@ my-data/
 | [onenav](https://github.com/weijia/onenav) | 内置记账小应用（流水 + 价格 + 电商订单，统一 type 模型） | [bookkeeping-format.md](./bookkeeping-format.md) |
 | my-quant | 策略管理与条件单 | [my-quant-strategy-format.md](./my-quant-strategy-format.md) |
 | [FluentOS-On-Web](https://github.com/weijia/FluentOS-On-Web)（dir-struct-gen / 文件管理器） | 本地目录结构清单（RemoteStorage 形态 B manifest，文件夹树 + 标签，只读） | [dir-struct-manifest-format.md](./dir-struct-manifest-format.md) |
+| [zen-fs-config-admin](https://github.com/weijia/zen-fs-config-admin)（配置同步组 / 配置仓） | 配置同步组后端配置字符串（`type:id:key=value,…` 一行文本化的 BackendDescriptor） | [config-sync-backend-format.md](./config-sync-backend-format.md) |
 
 ## WebDAV 同步
 

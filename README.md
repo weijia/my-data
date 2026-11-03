@@ -16,6 +16,7 @@ my-data/
 │   ├── trend-judgment-format.md       # 趋势判断格式
 │   ├── holdings-format.md             # 持仓历史格式
 │   ├── config-formats.md              # 应用配置格式
+│   ├── config-sync-backend-format.md  # 配置同步组（配置仓）后端配置字符串格式
 │   ├── webdav-data-formats.md         # WebDAV 同步架构
 │   ├── utags-bookmark-format.md       # utags 书签格式
 │   ├── kids-point-format.md           # kids-point 格式
