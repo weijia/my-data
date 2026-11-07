@@ -1,6 +1,6 @@
 # 聊天记录保存格式（home_cloud）
 
-本文档定义由 `home_cloud` 项目的 `scripts/download_chat_media.py` 生成的**聊天记录离线存档**的数据格式。该脚本将聊天室的文本、图片、视频消息拉取下来，按年月组织目录，媒体文件落盘为本地文件、HTML 使用相对路径引用，并借助状态文件实现增量下载。
+本文档定义由 `home_cloud` 项目的 `scripts/download_chat_media.py` 生成的**聊天记录离线存档**的数据格式。该脚本将聊天室的文本、图片、视频、语音（audio）消息拉取下来，按年月组织目录，媒体文件落盘为本地文件、HTML 使用相对路径引用，并借助状态文件实现增量下载。
 
 > **源码参考**（home_cloud）：
 > - 脚本：`scripts/download_chat_media.py`
@@ -11,10 +11,10 @@
 
 ## 1. 概述
 
-- **目标**：将聊天记录（文本 + 图片 + 视频）离线保存为可本地浏览的 HTML，媒体文件独立存储，便于增量更新与单独管理。
+- **目标**：将聊天记录（文本 + 图片 + 视频 + 语音）离线保存为可本地浏览的 HTML，媒体文件独立存储，便于增量更新与单独管理。
 - **数据来源**：Supabase `messages` 表（经邀请码定位 `chat_rooms`），按 `created_at` 分页拉取。
 - **存储方式**：本地文件目录（默认 `./chat_exports`，集成到 my-data 时置于 `app_data/chat-exports/`）。
-- **增量机制**：通过 `download_state.json`（根目录，跨月）记录上次下载时间/消息 ID；媒体索引 `media_index.json`（**存档根目录**，与 `download_state.json` 同层）记录媒体 URL→本地路径映射，作为下载去重台账，避免重复下载（见 §5.2）。
+- **增量机制**：通过 `download_state.json`（根目录，跨月）记录上次下载时间/消息 ID；媒体索引 `media_index.json`（**存档根目录**，与 `download_state.json` 同层）记录媒体 URL→本地路径映射，作为下载去重台账，避免重复下载（见 §6.2）。
 - **非目标**：不做并发下载、不做 Hash 完整性校验（见设计文档 §1.3）。
 
 ---
@@ -27,6 +27,7 @@
 | 月度目录 | 子目录 | `{YYYY-MM}/` | 如 `2024-01/`，按月切分 |
 | 图片目录 | 子目录 | `{YYYY-MM}/images/` | 当月图片存储 |
 | 视频目录 | 子目录 | `{YYYY-MM}/videos/` | 当月视频存储 |
+| 音频目录 | 子目录 | `{YYYY-MM}/audios/` | 当月语音存储（与 `images/`、`videos/` 并列） |
 | 月度 HTML | 文件 | `{YYYY-MM}/chat_{YYYY-MM}.html` | 当月聊天记录浏览页 |
 | 下载状态 | 文件 | `download_state.json` | 进度与游标（**存档根目录**，跨月，体积小） |
 | 媒体索引 | 文件 | `media_index.json` | 媒体 URL→本地路径映射（**存档根目录**，与 `download_state.json` 同层，下载器去重台账） |
@@ -45,10 +46,19 @@ chat_exports/
 │   ├── videos/
 │   │   ├── video_001_x1y2z3.mp4
 │   │   └── ...
+│   ├── audios/
+│   │   ├── audio_001_w1v2u3t4.wav
+│   │   ├── audio_002_k5l6m7n8.wav
+│   │   └── ...
+│   ├── originals/
+│   │   └── audios/
+│   │       ├── audio_001_w1v2u3t4.silk
+│   │       └── ...
 │   └── chat_2024-01.html
 ├── 2024-02/
 │   ├── images/
 │   ├── videos/
+│   ├── audios/
 │   └── chat_2024-02.html
 ├── ...
 ├── download_state.json            # 下载进度/游标（跨月）
@@ -63,17 +73,100 @@ chat_exports/
 |------|----------|------|
 | 图片 | `img_{序号}_{消息ID前8位}.{扩展名}` | `img_001_a1b2c3d.jpg` |
 | 视频 | `video_{序号}_{消息ID前8位}.{扩展名}` | `video_001_x1y2z3.mp4` |
+| 语音 | `audio_{序号}_{消息ID前8位}.{扩展名}` | `audio_001_w1v2u3t4.wav` |
 | HTML | `chat_{年}-{月}.html` | `chat_2024-01.html` |
 
-- **序号**：当月从 `1` 起自增，三位零填充（`001`、`002`…）。
+- **序号**：当月从 `1` 起自增，三位零填充（`001`、`002`…）；序号**按月独立**，且图片 / 视频 / 语音各自独立计数（同一条消息含多个媒体时，每个媒体各占一个序号）。
 - **消息 ID 前 8 位**：取自消息 `id` 的前 8 个字符；缺失时回退为 `unknown`。
-- **扩展名**：优先取 URL 路径扩展名（限 `jpg/jpeg/png/gif/webp/mp4/mov/avi`），否则按 `Content-Type` 推断，仍无法确定时默认 `jpg`。
+- **扩展名**：优先取 URL 路径扩展名，白名单为：
+
+  | 媒体类型 | 允许扩展名 | 无法确定时的默认值 |
+  |----------|------------|--------------------|
+  | 图片 | `jpg` `jpeg` `png` `gif` `webp` | `jpg` |
+  | 视频 | `mp4` `mov` `avi` | `mp4` |
+  | 语音 | `mp3` `wav` `amr` `silk` | `wav` |
+
+  白名单之外时按 `Content-Type` 推断；仍无法确定时按上表默认值。
+
+- **SILK 原始文件**：微信语音的原始编码为 SILK v3，浏览器无法直接播放。导出时统一转为 `wav`（PCM s16le 单声道，按实际采样率写入，微信语音通常为 24 kHz）落盘为 `audio_{序号}_{消息ID前8位}.wav`；`.silk` 原件**保留但不进入 `audios/`**，改存 `{YYYY-MM}/originals/audios/` 同名 `.silk`，避免被误当成可播放媒体。转码失败时才降级为 `.text` 占位并给出原件相对路径（见 §7）。
 
 ---
 
-## 5. 状态跟踪
+## 5. 消息模型（message_type 与 media）
 
-### 5.1 download_state.json
+### 5.1 消息对象
+
+```json
+{
+  "id": "wx_1234567890",
+  "created_at": "2024-03-15T10:30:00+08:00",
+  "sender_name": "张三",
+  "message_type": "audio",
+  "content": "",
+  "media": [
+    {
+      "type": "audio",
+      "source_path": "D:\\tmp\\voice.mp3",
+      "media_url": null,
+      "caption": "00:06 / 转写：明天下午三点见"
+    }
+  ],
+  "deleted_at": null
+}
+```
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `id` | `string` | 是 | 消息唯一标识；用于媒体命名（取前 8 位） |
+| `created_at` | `string` | 是 | 消息创建时间（ISO 8601，**必须带时区**，如 `+08:00` / `Z`）；决定所属月份与列表排序 |
+| `sender_name` | `string` | 否 | 发送者显示名，缺省 `Unknown` |
+| `message_type` | `string` | 是 | `text` / `image` / `video` / `audio` / `mixed` |
+| `content` | `string` | 否 | `text` 为正文；`image`/`video`/`audio` 为可选配文；`mixed` 为独立正文 |
+| `media` | `array<object>` | 否 | 媒体附件数组；为空表示纯文本 |
+| `media[].type` | `string` | 是 | `image` / `video` / `audio` |
+| `media[].source_path` | `string` | 否 | 本地源文件路径；导出时复制到对应媒体目录。缺失或文件不存在时只渲染占位 |
+| `media[].media_url` | `string` | 否 | 原始媒体地址；本地文件缺失时 HTML 回退使用 |
+| `media[].caption` | `string` | 否 | 该媒体的可选配文；语音可写时长、转写文本等 |
+| `deleted_at` | `string \| null` | 否 | 删除时间；非空的消息**不渲染** |
+
+### 5.2 消息类型处理
+
+| message_type | 渲染方式 |
+|--------------|----------|
+| `text` | 渲染 `content` 为纯文本段落；`media` 为空 |
+| `image` | `media` 含 1 个 `image` 项；`content` 可作配文 |
+| `video` | `media` 含 1 个 `video` 项；`content` 可作配文 |
+| `audio` | `media` 含 1 个 `audio` 项；`content` 可作配文（建议写时长/转写文本）；渲染 `.media-audio` 播放器，无可用文件时降级为 `.text` 占位 `[语音]` |
+| `mixed` | `content` 为独立文本正文，另按顺序渲染 `media` 数组中的全部图片 / 视频 / 语音 |
+
+> 单媒体消息与 mixed 的统一约定：`audio` / `image` / `video` 均只声明 1 个媒体项；同一条消息含多个媒体时必须用 `mixed` + `media` 数组，`content` 作正文（不能当作配文）。
+
+### 5.3 audio 与 mixed 组合
+
+语音与其他媒体可以自由混排，例如“文字 + 图片 + 语音”：
+
+```json
+{
+  "id": "wx_2233445566",
+  "created_at": "2024-03-15T11:00:00+08:00",
+  "sender_name": "张三",
+  "message_type": "mixed",
+  "content": "这几张图是现场照片，另外还有一段语音说明",
+  "media": [
+    { "type": "image", "source_path": "D:\\tmp\\p1.jpg", "caption": "现场 1" },
+    { "type": "audio", "source_path": "D:\\tmp\\v1.mp3", "caption": "00:12" }
+  ],
+  "deleted_at": null
+}
+```
+
+渲染顺序固定为：先 `content` 正文，再按 `media` 数组顺序逐个渲染；每个媒体的 `caption` 紧跟其自身（图片为 `.caption`，语音同理）。纯语音消息用 `message_type: audio`，不要把 `content` 写成 `[语音]` 占位——占位只在**没有可用媒体文件**时由导出器降级生成。
+
+---
+
+## 6. 状态跟踪
+
+### 6.1 download_state.json
 
 记录下载进度与游标，结构对应 `DownloadState` dataclass。
 
@@ -87,6 +180,7 @@ chat_exports/
   "total_messages": 1500,
   "total_images": 320,
   "total_videos": 15,
+  "total_audios": 48,
   "last_run": "2024-03-15T12:00:00Z",
   "status": "completed",
   "created_at": "2024-03-10T08:00:00.123456",
@@ -104,6 +198,7 @@ chat_exports/
 | `total_messages` | `number` | 是 | 累计消息数（增量累加） |
 | `total_images` | `number` | 是 | 累计新增图片数（仅本次真正下载的） |
 | `total_videos` | `number` | 是 | 累计新增视频数（仅本次真正下载的） |
+| `total_audios` | `number` | 是 | 累计新增语音数（仅本次真正落盘的；以 `audios/` 下可播放的 `wav` 计数，`.silk` 原件不计入） |
 | `last_run` | `string` | 否 | 最后一次运行时间 |
 | `status` | `string` | 是 | 运行状态：`initialized` / `downloading` / `completed` |
 | `created_at` | `string` | 是 | 状态文件创建时间 |
@@ -111,7 +206,7 @@ chat_exports/
 
 > 时间格式统一：`last_download_time` 内部规整为 `+00:00` → `Z`（见脚本 `_normalize_time_format`）。
 
-### 5.2 media_index.json
+### 6.2 media_index.json
 
 媒体文件索引，避免重复下载，结构对应 `MediaIndex` dataclass。位于**存档根目录**，与 `download_state.json` 同层——它只是下载器的内部去重台账，**不属于聊天记录内容**，不进入月度目录（保持月度目录为纯记录）；其他程序无需产出或读取它。
 
@@ -143,6 +238,7 @@ chat_exports/
 | `media_files.{url}.message_id` | `string` | 是 | 关联的消息 ID |
 | `media_files.{url}.downloaded_at` | `string` | 是 | 下载时间（`datetime.now().isoformat()`） |
 | `media_files.{url}.file_size` | `number` | 是 | 文件字节大小 |
+| `media_files.{url}.silk_original` | `string` | 否 | 语音专用：归档的 `.silk` 原件相对月度目录路径，如 `originals/audios/audio_001_w1v2u3t4.silk`；`local_path` 仍指向可播放的 `wav` |
 | `created_at` | `string` | 是 | 索引创建时间 |
 | `updated_at` | `string` | 是 | 索引最后更新时间 |
 
@@ -150,9 +246,9 @@ chat_exports/
 
 ---
 
-## 6. HTML 相对路径引用
+## 7. HTML 相对路径引用
 
-HTML 存放在月度目录下，与 `images/`、`videos/` 同层，因此用相对路径引用媒体：
+HTML 存放在月度目录下，与 `images/`、`videos/`、`audios/` 同层，因此用相对路径引用媒体：
 
 ```html
 <!-- 图片 -->
@@ -165,16 +261,27 @@ HTML 存放在月度目录下，与 `images/`、`videos/` 同层，因此用相�
   <source src="videos/video_001_x1y2z3.mp4" type="video/mp4">
   您的浏览器不支持视频播放
 </video>
+
+<!-- 语音：默认不预加载，避免一次打开页面时批量请求音频 -->
+<audio controls preload="none" class="media-audio" src="audios/audio_001_w1v2u3t4.wav"></audio>
+<p class="caption">00:06 / 转写：明天下午三点见</p>
+
+<!-- 转码失败降级：无可播放 wav 时，输出 .text 占位并链接 .silk 原件（原件不在 audios/） -->
+<p class="text">[语音]</p>
+<p class="text">[语音] <a href="originals/audios/audio_002_k5l6m7n8.silk">audio_002_k5l6m7n8.silk</a></p>
 ```
 
-- 默认使用本地相对路径；`onerror` 兜底回退到服务器原始 URL（离线打开时若本地文件缺失仍可显示）。
+- 默认使用本地相对路径；图片/视频的 `onerror` 兜底回退到服务器原始 URL（离线打开时若本地文件缺失仍可显示）。
+- 语音统一用 `<audio controls preload="none" class="media-audio" src="audios/*.wav">`，不依赖 `onerror`：有本地 wav 即可播放；只能在转码失败时由导出器降级为 `.text` 占位并链接 `originals/audios/*.silk`，避免出现空播放器。
+- 语音卡片的 `.caption` 可选，建议写时长（如 `00:06`）或转写文本。
 - 每条消息渲染为 `.message` 卡片：`.message-header`（发送者 + 时间戳）、`.message-content`（文本/媒体 + 可选 `caption`）。
+- mixed 消息先渲染 `content` 正文，再按 `media` 数组顺序依次渲染图片/视频/语音，`caption` 跟随各自媒体。
 - 已删除消息（`deleted_at` 非空）在生成时被跳过。
-- 时间戳统一转换为 `YYYY-MM-DD HH:MM:SS`（本地时区）展示。
+- 时间戳统一转换为 `YYYY-MM-DD HH:MM:SS`（本地时区）展示；文本与配文做 HTML 转义（`& < > " '`）。
 
 ---
 
-## 7. 配置文件
+## 8. 配置文件
 
 复用 `scripts/chat_download_config.json`（JSON 文件形式）：
 
@@ -200,7 +307,7 @@ HTML 存放在月度目录下，与 `images/`、`videos/` 同层，因此用相�
 
 ---
 
-## 8. 命令行用法
+## 9. 命令行用法
 
 ```bash
 python download_chat_media.py              # 增量下载（默认，读 last_download_time 之后）
@@ -213,7 +320,7 @@ python download_chat_media.py --status     # 查看下载状态
 
 ---
 
-## 9. 数据来源（源码）
+## 10. 数据来源（源码）
 
 | 模块 | 函数 | 生成内容 |
 |------|------|----------|
