@@ -288,6 +288,6 @@ FluentOS 文件管理器（[`js/apps/files.js`](https://github.com/weijia/Fluent
 - 路径键同样为 host-relative（盘符 + `/` 连接的嵌套目录名，如 `C:/Photos/2024`）；标签为任意字符串数组，去重、去空白、过滤空串。
 - 标签**只存于 `file-tags`**，绝不回写 `struct/` 清单——即用户标签与 dir-struct-gen 自动探测的清单标签（`node.tags`）互不污染。
 - 读取侧（onenav 文件浏览器）按 `key` 预载整块盘的标签表，渲染时按 host-relative 路径命中到具体节点，展示为琥珀色芯片；点击芯片可把目录树**按该标签筛选**。
-- **保留标签 `private`（大小写不敏感）**：目录含该标签时，**缺省在文件浏览器中隐藏**（连同子树整体不显示）。用户输入约定口令（如 `wwssadadba`）后切换显示/隐藏。这是读取侧行为约定，不影响存储；`private` 仍只是 `file-tags` 里的一个普通标签值。
+- **保留标签 `private`（大小写不敏感）**：目录含该标签时，**缺省在文件浏览器中隐藏**（连同子树整体不显示）。在页面任意处依次键入约定 magic code（键盘序列，无需输入框，如 `wwssadadba`）即可**切换**显示/隐藏；在文本输入控件内（搜索框等）的按键不参与序列，避免误触。这是读取侧行为约定，不影响存储；`private` 仍只是 `file-tags` 里的一个普通标签值。
 - 写入通过 RemoteStorage `writeFile`（与 `folder-deepen` 同一套鉴权 / `app_data` 作用域），删除某条目全部标签时移除该路径键（键表空则文件可保留为空对象）。
 
