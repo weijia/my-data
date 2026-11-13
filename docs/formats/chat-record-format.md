@@ -39,9 +39,11 @@
 ```
 chat_exports/
 ├── 2024-01/
-│   ├── images/
-│   │   ├── img_001_a1b2c3d.jpg
-│   │   ├── img_002_e4f5g6h.png
+│   ├── images/                    # 只放浏览器可显示的图片
+│   │   ├── img_001_a1b2c3d.jpg            # 主图（由 wxgf 转码而来）
+│   │   ├── img_001_a1b2c3d_thumb.jpg      # 原生缩略图
+│   │   ├── img_002_e4f5g6h.png            # 主图
+│   │   ├── img_002_e4f5g6h_thumb.jpg
 │   │   └── ...
 │   ├── videos/
 │   │   ├── video_001_x1y2z3.mp4
@@ -50,7 +52,8 @@ chat_exports/
 │   │   ├── audio_001_w1v2u3t4.wav
 │   │   ├── audio_002_k5l6m7n8.wav
 │   │   └── ...
-│   ├── originals/
+│   ├── originals/                 # 原件归档，不可直接显示/播放
+│   │   ├── img_001_a1b2c3d.wxgf           # wxgf（HEVC 静帧容器）原件
 │   │   └── audios/
 │   │       ├── audio_001_w1v2u3t4.silk
 │   │       └── ...
@@ -71,7 +74,9 @@ chat_exports/
 
 | 类型 | 命名格式 | 示例 |
 |------|----------|------|
-| 图片 | `img_{序号}_{消息ID前8位}.{扩展名}` | `img_001_a1b2c3d.jpg` |
+| 图片（主图） | `img_{序号}_{消息ID前8位}.{扩展名}` | `img_001_a1b2c3d.jpg` |
+| 图片（缩略图） | `img_{序号}_{消息ID前8位}_thumb.{扩展名}` | `img_001_a1b2c3d_thumb.jpg` |
+| 图片原件 | `originals/img_{序号}_{消息ID前8位}.{扩展名}` | `originals/img_001_a1b2c3d.wxgf` |
 | 视频 | `video_{序号}_{消息ID前8位}.{扩展名}` | `video_001_x1y2z3.mp4` |
 | 语音 | `audio_{序号}_{消息ID前8位}.{扩展名}` | `audio_001_w1v2u3t4.wav` |
 | HTML | `chat_{年}-{月}.html` | `chat_2024-01.html` |
@@ -89,6 +94,7 @@ chat_exports/
   白名单之外时按 `Content-Type` 推断；仍无法确定时按上表默认值。
 
 - **SILK 原始文件**：微信语音的原始编码为 SILK v3，浏览器无法直接播放。导出时统一转为 `wav`（PCM s16le 单声道，按实际采样率写入，微信语音通常为 24 kHz）落盘为 `audio_{序号}_{消息ID前8位}.wav`；`.silk` 原件**保留但不进入 `audios/`**，改存 `{YYYY-MM}/originals/audios/` 同名 `.silk`，避免被误当成可播放媒体。转码失败时才降级为 `.text` 占位并给出原件相对路径（见 §7）。
+- **wxgf 主图转码**：微信 4.x 的图片主图是 `wxgf` 容器（32 字节头 + 6~10 字节私有前缀 + Annex B HEVC 静帧 + 8 字节尾标记 + 16 字节 MD5），浏览器无法显示。导出阶段完成转码：定位第一个 VPS 起始码 `00 00 00 01 40 01`（个别文件提前 4 字节，偏移 38），切到文件末尾 24 字节之前得到裸 HEVC，再用 ffmpeg 输出 JPEG（`-frames:v 1 -update 1 -q:v 2`，`yuvj420p` 全范围），落盘为 `images/img_{序号}_{消息ID前8位}.jpg`；原生缩略图另存为 `images/img_{序号}_{消息ID前8位}_thumb.jpg`；`.wxgf` 原件存 `originals/img_{序号}_{消息ID前8位}.wxgf`。**转码失败的图片不得用缩略图冒充主图**，消息降级为 `[图片]` 文本占位，并在导出汇总中逐条列出失败原因。
 
 ---
 
@@ -235,6 +241,11 @@ chat_exports/
 |------|------|------|------|
 | `media_files` | `object` | 是 | 键为媒体原始 URL，值为该媒体的元数据（**全量累计**，跨月共享，去重范围覆盖所有月份） |
 | `media_files.{url}.local_path` | `string` | 是 | 相对**月度目录**的本地路径（不含 `YYYY-MM/` 前缀），如 `images/img_001_a1b2c3.jpg`；HTML 与媒体同处月度目录，故直接以该相对路径引用 |
+| `media_files.{url}.role` | `string` | 否 | `page_image`（页面显示的主图）/ `thumbnail`（原生缩略图）/ `original`（原件归档）/ `video` / `poster` / `audio`。仅 `page_image` 与 `poster` 参与页面渲染 |
+| `media_files.{url}.container` | `string` | 否 | 文件真实容器：`jpeg` / `png` / `wxgf` / `mp4` / `wav` / `silk` 等；与 `displayable` 对应 |
+| `media_files.{url}.displayable` | `bool` | 否 | 浏览器能否直接显示/播放：`jpeg`/`png`/`mp4`/`wav` 为 `true`；`wxgf`/`silk` 原件为 `false` |
+| `media_files.{url}.original_path` | `string` | 否 | 图片专用：主图对应的 `wxgf` 原件相对月度目录路径，如 `originals/img_001_a1b2c3.wxgf`；转码成功后 `local_path` 指向同序号 `images/*.jpg` |
+| `media_files.{url}.converted_from` | `string` | 否 | 主图转码来源标记（如 `wxgf`），表示 `local_path` 由原件转码得到而非原生文件 |
 | `media_files.{url}.message_id` | `string` | 是 | 关联的消息 ID |
 | `media_files.{url}.downloaded_at` | `string` | 是 | 下载时间（`datetime.now().isoformat()`） |
 | `media_files.{url}.file_size` | `number` | 是 | 文件字节大小 |
@@ -251,9 +262,16 @@ chat_exports/
 HTML 存放在月度目录下，与 `images/`、`videos/`、`audios/` 同层，因此用相对路径引用媒体：
 
 ```html
-<!-- 图片 -->
-<img src="images/img_001_a1b2c3.jpg" class="media-image"
-     onerror="this.onerror=null;this.src='https://storage.supabase.co/xxx/abc.jpg'">
+<!-- 图片：主图由 wxgf 转码，外层链接指向原图；限高不裁切、点击可打开原图 -->
+<a href="images/img_001_a1b2c3d.jpg" target="_blank" rel="noopener">
+  <img src="images/img_001_a1b2c3d.jpg" class="media-image" alt="图片"
+       onerror="this.onerror=null;var a=this.parentNode;a.innerText='[图片加载失败]';a.removeAttribute('href')">
+</a>
+
+<!-- 图片样式约定：不放大、不裁切、限高 -->
+<style>
+  .media-image { max-width:100%; max-height:70vh; object-fit:contain; height:auto; }
+</style>
 
 <!-- 视频 -->
 <video controls class="media-video"
@@ -271,7 +289,10 @@ HTML 存放在月度目录下，与 `images/`、`videos/`、`audios/` 同层，�
 <p class="text">[语音] <a href="originals/audios/audio_002_k5l6m7n8.silk">audio_002_k5l6m7n8.silk</a></p>
 ```
 
-- 默认使用本地相对路径；图片/视频的 `onerror` 兜底回退到服务器原始 URL（离线打开时若本地文件缺失仍可显示）。
+- 图片一律用本地相对路径 `images/*.jpg`；外层 `<a href="images/... " target="_blank" rel="noopener">` 让点击可打开原图，不使用任何弹层脚本。
+- 图片显示约束：`max-width:100%`、`max-height:70vh`、`object-fit:contain`、`height:auto`——等比缩放、不裁切、不放大（缩略图按原始像素显示）。
+- 图片加载失败时由 `onerror` 原地替换为文本占位 `[图片加载失败]` 并移除链接，不留破图标；不得用缩略图冒充主图。
+- 视频的 `onerror` 仅在联网导出场景下兜底回退到服务器原始 URL；纯离线存档不依赖该回退。
 - 语音统一用 `<audio controls preload="none" class="media-audio" src="audios/*.wav">`，不依赖 `onerror`：有本地 wav 即可播放；只能在转码失败时由导出器降级为 `.text` 占位并链接 `originals/audios/*.silk`，避免出现空播放器。
 - 语音卡片的 `.caption` 可选，建议写时长（如 `00:06`）或转写文本。
 - 每条消息渲染为 `.message` 卡片：`.message-header`（发送者 + 时间戳）、`.message-content`（文本/媒体 + 可选 `caption`）。
