@@ -22,6 +22,7 @@
 | **默认存储基目录** | `app_data/folders/`（app-data 数据组 RemoteStorage 后端的 `basePath`） |
 | **清单目录** | `<基>/struct/`：主机索引与卷分片（v2 拆分存储，见下文「v2」）均存放于此 |
 | **深挖标记目录** | `<基>/folder-deepen/`：深挖标记文件存放于此 |
+| **用户标签目录** | `<基>/file-tags/`：目录/磁盘自定义标签文件存放于此 |
 | **默认文件名** | 主机索引 = 本机主机名（`os.hostname()`），如 `LAPTOP-91PR81Q2`；卷分片 = `<volumeId>.<createdTime>.json`（见 v2） |
 | **完整上传目标** | `<服务器地址>/app_data/folders/struct/<主机名>.json`（主机索引） |
 | **鉴权** | `Bearer` Token（与 RemoteStorage 连接 / app-data 数据组共用） |
@@ -203,7 +204,7 @@ FluentOS 文件管理器（[`js/apps/files.js`](https://github.com/weijia/Fluent
 3. 清单被 `fetchManifest` 读取后**校验 `root.type === "folder"`**，通过则把整棵 `root.children` 渲染为只读目录树。
 4. 远程节点全部**只读**：右键仅提供「打开 / 刷新 / 属性」，禁止新建 / 重命名 / 拖入。
 
-> **onenav 文件浏览器（已实现 v2 读取）**：通过 `getFoldersBase()`（设置项，默认 `app_data/folders`，须与 dir-struct-gen 数据组后端 `basePath` 一致）定位基目录，自动读取 `<基>/struct/` 全部清单、按「分片合并规则」合成目录树；深挖标记从 `<基>/folder-deepen/` 读取。该路径对接本文档 v2 的全部语义（主机索引、`volumeId` 去重、并集合并、`mtime` 不参与取舍等），见 `src/components/apps/filebrowser/` 的 `fetch.ts` / `merge.ts` / `types.ts`。
+> **onenav 文件浏览器（已实现 v2 读取）**：通过 `getFoldersBase()`（设置项，默认 `app_data/folders`，须与 dir-struct-gen 数据组后端 `basePath` 一致）定位基目录，自动读取 `<基>/struct/` 全部清单、按「分片合并规则」合成目录树；深挖标记从 `<基>/folder-deepen/` 读取，用户标签从 `<基>/file-tags/` 读取。该路径对接本文档 v2 的全部语义（主机索引、`volumeId` 去重、并集合并、`mtime` 不参与取舍等），见 `src/components/apps/filebrowser/` 的 `fetch.ts` / `merge.ts` / `types.ts` / `normalize.ts`。用户标签支持「点击芯片按标签筛选整棵树」。
 
 ## 其他程序如何加载
 
@@ -280,4 +281,14 @@ FluentOS 文件管理器（[`js/apps/files.js`](https://github.com/weijia/Fluent
 - `key` = 该目录所属驱动层的 `volumeId`（跨主机共享）；回退为 `主机::盘符`。
 - `marks` 中的路径为 host-relative（盘符 + `/` 连接的嵌套目录名）。
 - 生成器下次「上传」时读取这些标记，对标记目录**按需多读一层真实磁盘**并入卷文件，然后**清空（消耗）**标记文件。标记仅下次生成生效一次。
+
+### 用户标签 `file-tags`
+- 浏览器里给用户任意**目录（含磁盘根）**打的自定义标签 → 写入 `app_data/folders/file-tags/<key>.json`：`{ "tags": { "<host-relative 路径>": ["旅行","2024"], ... } }`（位于基目录的 `file-tags/` 子目录，与清单 `struct/`、深挖标记 `folder-deepen/` 三者并列，见「存储与传输」）。
+- `<key>` 与上文 `folder-deepen` **同一命名空间**：驱动层 `volumeId`（跨主机共享），回退为 `主机::盘符`。
+- 路径键同样为 host-relative（盘符 + `/` 连接的嵌套目录名，如 `C:/Photos/2024`）；标签为任意字符串数组，去重、去空白、过滤空串。
+- 标签**只存于 `file-tags`**，绝不回写 `struct/` 清单——即用户标签与 dir-struct-gen 自动探测的清单标签（`node.tags`）互不污染。
+- 读取侧（onenav 文件浏览器）按 `key` 预载整块盘的标签表，渲染时按 host-relative 路径命中到具体节点，展示为琥珀色芯片；点击芯片可把目录树**按该标签筛选**。
+- **保留标签 `private`（大小写不敏感）**：目录含该标签时，**缺省在文件浏览器中隐藏**（连同子树整体不显示）。在页面任意处依次键入约定 magic code（键盘序列，无需输入框，如 `wwssadadba`）即可**切换**显示/隐藏；在文本输入控件内（搜索框等）的按键不参与序列，避免误触。
+- **缺省隐藏是静默的**：未解锁时界面**不显示任何与隐私目录相关的提示、徽标或计数**（否则等于宣告存在被隐藏的目录）。只有解锁、隐私目录确实可见之后，才显示一条状态提示（已显示 N 个及再次键入可隐藏）。这是读取侧行为约定，不影响存储；`private` 仍只是 `file-tags` 里的一个普通标签值。
+- 写入通过 RemoteStorage `writeFile`（与 `folder-deepen` 同一套鉴权 / `app_data` 作用域），删除某条目全部标签时移除该路径键（键表空则文件可保留为空对象）。
 
