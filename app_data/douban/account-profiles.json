@@ -1,0 +1,655 @@
+{
+  "schemaVersion": 1,
+  "kind": "account-profile-cache",
+  "description": "跨平台账号公开属性缓存，避免重复访问主页；条目按 platform + accountId 唯一。",
+  "lastUpdated": "2026-11-13T15:05:00+08:00",
+  "accounts": [
+    {
+      "platform": "douban",
+      "accountId": "284156883",
+      "nickname": "为啥呀",
+      "gender": "unknown",
+      "region": "浙江",
+      "verifiedAt": "2026-11-13",
+      "sourceRefs": [
+        "505501855"
+      ],
+      "note": "主页无性别标识"
+    },
+    {
+      "platform": "douban",
+      "accountId": "144501115",
+      "nickname": "以后别做朋友。",
+      "gender": "male",
+      "region": "浙江",
+      "verifiedAt": "2026-11-13",
+      "sourceRefs": [
+        "505500439"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "281297850",
+      "nickname": "豆豆",
+      "gender": "male",
+      "region": "浙江",
+      "verifiedAt": "2026-11-13",
+      "sourceRefs": [
+        "505498289"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "89905646",
+      "nickname": "momo",
+      "gender": "female",
+      "region": "浙江",
+      "verifiedAt": "2026-11-13",
+      "sourceRefs": [
+        "505412327"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "265778025",
+      "nickname": "研究生",
+      "gender": "male",
+      "region": "浙江",
+      "verifiedAt": "2026-11-13",
+      "sourceRefs": [
+        "505490069"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "185986292",
+      "nickname": "啊！",
+      "gender": "female",
+      "region": "浙江",
+      "verifiedAt": "2026-11-13",
+      "sourceRefs": [
+        "505485475",
+        "505486659"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "298058786",
+      "nickname": "",
+      "gender": "female",
+      "region": "广西",
+      "verifiedAt": "2026-11-13",
+      "sourceRefs": [
+        "505506061"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "53807683",
+      "nickname": "",
+      "gender": "female",
+      "region": "辽宁",
+      "verifiedAt": "2026-11-13",
+      "sourceRefs": [
+        "505530220"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "191786547",
+      "nickname": "",
+      "gender": "female",
+      "region": "北京",
+      "verifiedAt": "2026-11-13",
+      "sourceRefs": [
+        "505529973"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "174005080",
+      "nickname": "",
+      "gender": "female",
+      "region": "广东",
+      "verifiedAt": "2026-11-13",
+      "sourceRefs": [
+        "505528747"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "294191558",
+      "nickname": "",
+      "gender": "female",
+      "region": "北京",
+      "verifiedAt": "2026-11-13",
+      "sourceRefs": [
+        "505500668"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "275530967",
+      "nickname": "",
+      "gender": "female",
+      "region": "新疆",
+      "verifiedAt": "2026-11-13",
+      "sourceRefs": [
+        "505517712"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "288195376",
+      "nickname": "",
+      "gender": "female",
+      "region": "河北",
+      "verifiedAt": "2026-11-13",
+      "sourceRefs": [
+        "505514671"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "164436991",
+      "nickname": "",
+      "gender": "female",
+      "region": "山东",
+      "verifiedAt": "2026-11-13",
+      "sourceRefs": [
+        "505515772"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "147561106",
+      "nickname": "",
+      "gender": "female",
+      "region": "陕西",
+      "verifiedAt": "2026-11-13",
+      "sourceRefs": [
+        "505529171"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "229983205",
+      "nickname": "",
+      "gender": "female",
+      "region": "安徽",
+      "verifiedAt": "2026-11-13",
+      "sourceRefs": [
+        "505503380"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "tt37020150817",
+      "nickname": "",
+      "gender": "female",
+      "region": "广东",
+      "verifiedAt": "2026-11-13",
+      "sourceRefs": [
+        "505524527"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "132811356",
+      "nickname": "",
+      "gender": "female",
+      "region": "山东",
+      "verifiedAt": "2026-11-13",
+      "sourceRefs": [
+        "505481241"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "4518428",
+      "nickname": "",
+      "gender": "female",
+      "region": "山东",
+      "verifiedAt": "2026-11-13",
+      "sourceRefs": [
+        "505501970"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "295549823",
+      "nickname": "集大程寡人多欲",
+      "gender": "male",
+      "region": "浙江",
+      "verifiedAt": "2026-11-13",
+      "sourceRefs": [
+        "505516957"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "amyjecat",
+      "nickname": "账号未注销",
+      "gender": "unknown",
+      "region": "浙江",
+      "verifiedAt": "2026-11-13",
+      "sourceRefs": [
+        "505507604"
+      ],
+      "note": "主页无性别标识"
+    },
+    {
+      "platform": "douban",
+      "accountId": "296145985",
+      "nickname": "妮妮",
+      "gender": "female",
+      "region": "浙江",
+      "verifiedAt": "2026-11-13",
+      "sourceRefs": [
+        "505530746"
+      ],
+      "note": "ntr有？"
+    },
+    {
+      "platform": "douban",
+      "accountId": "298089129",
+      "nickname": "困",
+      "gender": "female",
+      "region": "广东",
+      "verifiedAt": "2026-11-13",
+      "sourceRefs": [
+        "505524065"
+      ],
+      "note": "辞职爽"
+    },
+    {
+      "platform": "douban",
+      "accountId": "297666432",
+      "nickname": "天天开心",
+      "gender": "female",
+      "region": "山东",
+      "verifiedAt": "2026-11-13",
+      "sourceRefs": [
+        "505514539"
+      ],
+      "note": "给小七岁男友买车"
+    },
+    {
+      "platform": "douban",
+      "accountId": "185580622",
+      "nickname": "李延哥哥😘",
+      "gender": "female",
+      "region": "江苏",
+      "verifiedAt": "2026-11-13",
+      "sourceRefs": [
+        "505531188"
+      ],
+      "note": "很害怕以年为单位"
+    },
+    {
+      "platform": "douban",
+      "accountId": "289963934",
+      "nickname": "c",
+      "gender": "female",
+      "region": "贵州",
+      "verifiedAt": "2026-11-13",
+      "sourceRefs": [
+        "505521441"
+      ],
+      "note": "有在车企工作的吗"
+    },
+    {
+      "platform": "douban",
+      "accountId": "288814211",
+      "nickname": "心狠手辣",
+      "gender": "female",
+      "region": "海南",
+      "verifiedAt": "2026-11-13",
+      "sourceRefs": [
+        "505502228"
+      ],
+      "note": "人到中年越走越弯"
+    },
+    {
+      "platform": "douban",
+      "accountId": "201719320",
+      "nickname": "啊呀青",
+      "gender": "female",
+      "region": "山东",
+      "verifiedAt": "2026-11-12",
+      "sourceRefs": [
+        "505451140"
+      ],
+      "note": "目标45岁存够100万"
+    },
+    {
+      "platform": "douban",
+      "accountId": "221932736",
+      "nickname": "回本之路",
+      "gender": "female",
+      "region": "浙江",
+      "verifiedAt": "2026-11-13",
+      "sourceRefs": [
+        "505529502"
+      ],
+      "note": "从7月开始跌5个月"
+    },
+    {
+      "platform": "douban",
+      "accountId": "189267797",
+      "nickname": "胡图图的幼儿班",
+      "gender": "female",
+      "region": "上海",
+      "verifiedAt": "2026-11-12",
+      "sourceRefs": [
+        "505438525"
+      ],
+      "note": "有些女孩谈不好恋爱"
+    },
+    {
+      "platform": "douban",
+      "accountId": "158244227",
+      "nickname": "兰因絮果",
+      "gender": "female",
+      "region": "广东",
+      "verifiedAt": "2026-11-13",
+      "sourceRefs": [
+        "505501875"
+      ],
+      "note": "91年存款多少"
+    },
+    {
+      "platform": "douban",
+      "accountId": "292021941",
+      "nickname": "晚熟的玫瑰",
+      "gender": "female",
+      "region": "黑龙江",
+      "verifiedAt": "2026-11-12",
+      "sourceRefs": [
+        "505406773"
+      ],
+      "note": "摸鱼咯"
+    }
+  ],
+  "pending": [
+    {
+      "platform": "douban",
+      "accountId": "276404236",
+      "gender": "unknown",
+      "region": "上海",
+      "sourceRefs": [
+        "505521740"
+      ],
+      "todo": [
+        "nickname",
+        "body"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "250851425",
+      "gender": "unknown",
+      "region": "上海",
+      "sourceRefs": [
+        "505519895"
+      ],
+      "todo": [
+        "nickname",
+        "body"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "221820187",
+      "gender": "unknown",
+      "region": "安徽",
+      "sourceRefs": [
+        "505523337"
+      ],
+      "todo": [
+        "nickname",
+        "body"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "216899422",
+      "gender": "unknown",
+      "region": "河北",
+      "sourceRefs": [
+        "505499732"
+      ],
+      "todo": [
+        "nickname",
+        "body"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "292331886",
+      "gender": "unknown",
+      "region": "广西",
+      "sourceRefs": [
+        "505498761"
+      ],
+      "todo": [
+        "nickname",
+        "body"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "294074942",
+      "gender": "unknown",
+      "region": "山西",
+      "sourceRefs": [
+        "505518352"
+      ],
+      "todo": [
+        "nickname",
+        "body"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "252329980",
+      "gender": "unknown",
+      "region": "云南",
+      "sourceRefs": [
+        "505504747"
+      ],
+      "todo": [
+        "nickname",
+        "body"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "268153014",
+      "gender": "unknown",
+      "region": "广东",
+      "sourceRefs": [
+        "505510595"
+      ],
+      "todo": [
+        "nickname",
+        "body"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "297919513",
+      "gender": "unknown",
+      "region": "江苏",
+      "sourceRefs": [
+        "505482951"
+      ],
+      "todo": [
+        "nickname",
+        "body"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "193575116",
+      "gender": "unknown",
+      "region": "青海",
+      "sourceRefs": [
+        "505456705"
+      ],
+      "todo": [
+        "nickname",
+        "body"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "196057125",
+      "gender": "unknown",
+      "region": "河北",
+      "sourceRefs": [
+        "505442635"
+      ],
+      "todo": [
+        "nickname",
+        "body"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "296379712",
+      "gender": "unknown",
+      "region": "江苏",
+      "sourceRefs": [
+        "505443349"
+      ],
+      "todo": [
+        "nickname",
+        "body"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "50686669",
+      "gender": "unknown",
+      "region": "上海",
+      "sourceRefs": [
+        "505527529"
+      ],
+      "todo": [
+        "nickname",
+        "body"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "151622651",
+      "gender": "unknown",
+      "region": "浙江",
+      "sourceRefs": [
+        "505527777"
+      ],
+      "todo": [
+        "nickname",
+        "body"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "176053006",
+      "gender": "unknown",
+      "region": "广东",
+      "sourceRefs": [
+        "505527367"
+      ],
+      "todo": [
+        "nickname",
+        "body"
+      ]
+    },
+    {
+      "platform": "douban",
+      "accountId": "53233557",
+      "gender": "unknown",
+      "region": "北京",
+      "sourceRefs": [
+        "505464333"
+      ],
+      "todo": [
+        "nickname",
+        "body"
+      ],
+      "note": "通知我见面"
+    },
+    {
+      "platform": "douban",
+      "accountId": "163875037",
+      "gender": "unknown",
+      "region": "福建",
+      "sourceRefs": [
+        "505532687"
+      ],
+      "todo": [
+        "nickname",
+        "body"
+      ],
+      "note": "畅想多久回本"
+    },
+    {
+      "platform": "douban",
+      "accountId": "55868596",
+      "gender": "unknown",
+      "region": "四川",
+      "sourceRefs": [
+        "505531668"
+      ],
+      "todo": [
+        "nickname",
+        "body"
+      ],
+      "note": "反弹结束清仓"
+    },
+    {
+      "platform": "douban",
+      "accountId": "73938222",
+      "gender": "unknown",
+      "region": "上海",
+      "sourceRefs": [
+        "505518462"
+      ],
+      "todo": [
+        "nickname",
+        "body"
+      ],
+      "note": "小9岁弟弟"
+    },
+    {
+      "platform": "douban",
+      "accountId": "233735242",
+      "gender": "unknown",
+      "region": "陕西",
+      "sourceRefs": [
+        "505499114"
+      ],
+      "todo": [
+        "nickname",
+        "body"
+      ],
+      "note": "男生女兄弟"
+    },
+    {
+      "platform": "douban",
+      "accountId": "48832423",
+      "gender": "unknown",
+      "region": "山东",
+      "sourceRefs": [
+        "505529353"
+      ],
+      "todo": [
+        "nickname",
+        "body"
+      ],
+      "note": "头破血流"
+    }
+  ]
+}
