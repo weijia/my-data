@@ -22,9 +22,11 @@ my-data/
 │   ├── kids-point-format.md           # kids-point 格式索引
 │   ├── my-quant-strategy-format.md    # my-quant 策略格式索引
 │   ├── host-disk-info-format.md       # 主机与磁盘信息格式（home_cloud 采集）
+│   ├── mqtt-config-string-format.md   # MQTT 连接配置字符串（mqtthub 风格 key=value&…，跨系统交换格式）
 │   ├── dir-struct-manifest-format.md  # 目录结构清单（dir-struct-gen 生成 / FluentOS 文件管理器读取）
 │   ├── bookkeeping-format.md          # onenav 记账应用格式索引
-│   └── chat-record-format.md         # 聊天记录保存格式（home_cloud download_chat_media）
+│   ├── chat-record-format.md         # 聊天记录保存格式（home_cloud download_chat_media）
+│   └── account-profile-cache-format.md # 跨平台账号公开属性缓存（性别/地区）格式
 ├── app_data/                          # 应用数据（推荐）
 │   └── {项目名}/                      # 每个应用一个子目录
 ├── stocks/                            # 股票基础数据
@@ -58,6 +60,7 @@ my-data/
 | `config/webdav_config.json` | WebDAV 连接配置 | [config-formats.md](./config-formats.md#2-webdav-连接配置) |
 | `ufs-nodes/{uuid}.json`（主机状态）/ `O:\app_data\disks\*` | 主机与磁盘信息（home_cloud 采集） | [host-disk-info-format.md](./host-disk-info-format.md) |
 | `app_data/chat-exports/{YYYY-MM}/`（含 `images/`、`videos/`、`chat_{YYYY-MM}.html`；根目录另有 `download_state.json` / `media_index.json` 下载器台账） | 聊天记录离线存档（home_cloud download_chat_media） | [chat-record-format.md](./chat-record-format.md) |
+| `app_data/{平台}/account-profiles.json`（外部盘 `O:\app_data\{平台}\account-profiles.json`） | 跨平台账号公开属性缓存（性别/地区） | [account-profile-cache-format.md](./account-profile-cache-format.md) |
 
 ## 第三方应用数据格式
 
@@ -69,6 +72,7 @@ my-data/
 | my-quant | 策略管理与条件单 | [my-quant-strategy-format.md](./my-quant-strategy-format.md) |
 | [FluentOS-On-Web](https://github.com/weijia/FluentOS-On-Web)（dir-struct-gen / 文件管理器） | 本地目录结构清单（RemoteStorage 形态 B manifest，文件夹树 + 标签，只读） | [dir-struct-manifest-format.md](./dir-struct-manifest-format.md) |
 | [zen-fs-config-admin](https://github.com/weijia/zen-fs-config-admin)（配置同步组 / 配置仓） | 配置同步组后端配置字符串（`type:id:key=value,…` 一行文本化的 BackendDescriptor） | [config-sync-backend-format.md](./config-sync-backend-format.md) |
+| [mqtthub](https://github.com/weijia/mqtthub) / [mqtt-crypto-client](https://github.com/weijia/mqtt-crypto-client) | MQTT 连接配置字符串（`key=value&…` 一行文本化，可粘贴/进 URL；密码字段 `password` 对应库内 `secret`，与 CryptoJS AES 互通） | [mqtt-config-string-format.md](./mqtt-config-string-format.md) |
 
 ## WebDAV 同步
 

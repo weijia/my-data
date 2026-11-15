@@ -21,3 +21,6 @@ Thumbs.db
 /app_data/chat-exports/
 /app_data/wechat-decrypted/
 /tools/
+
+# 私有应用数据(豆瓣账号配置等)，不入库
+/app_data/
